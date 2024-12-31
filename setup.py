@@ -1,17 +1,19 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="tradesmart",
     version="0.1.0",
     author="ichimei0125",
     description="A cryptocurrency and stock trading bot with simulation support",
-    packages=find_packages(),
+    # packages=find_packages(),
     install_requires=[
-        "ccxt",
-        "pandas",
-        "numpy",
+        "ccxt==4.4",
+        "pandas==2.2",
+        "numpy==2.2",
         "PyYAML",
         "pytest",
+        "SQLAlchemy==2.0",
+        "mariadb==1.1",
     ],
     # entry_points={
     #     "console_scripts": [
