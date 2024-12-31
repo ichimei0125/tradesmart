@@ -6,4 +6,4 @@ exchange:
       - BTC_JPY
       - XRP_JPY
 
-connection_string: ""
+connection_string: "mariadb+mariadbconnector://tradebot:{your_password}@127.0.0.1:3306/tradedb"
