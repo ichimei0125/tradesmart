@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 import ccxt
 
-from api.exchange import Exchange
+from api.crypto.exchange import Exchange
 
 
 class Bitflyer(Exchange):
