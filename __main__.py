@@ -1,9 +1,12 @@
-from api.exchange import Exchange
-from api.bitflyer.bitflyer import Bitflyer
+from api.crypto.exchange import Exchange
+from api.crypto.bitflyer.bitflyer import Bitflyer
+from config.config import Config
 
 def main() -> None:
-    a = Bitflyer(['test'])
-    a.fetch_history_data()
+    # init
+    c = Config()
+    e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
+    e.fetch_history_data()
     
 
 if __name__ == '__main__':

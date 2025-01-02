@@ -8,9 +8,11 @@ class Side(Enum):
 class Trade:
     # exchange: str
     # symbol: str
+    id: str
     side: Side
     size: float
     execution_time: datetime
+    price: float
 
 class CandleStick:
     # exchange: str

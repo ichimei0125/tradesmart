@@ -15,14 +15,15 @@ def init_dbtrade_schema(exchange_name:str,symbol:str) -> None:
         sqlalchemy.Table(
             table_name,
             Base.metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True, autoincrement=True),
+            sqlalchemy.Column('id', sqlalchemy.String(length=15), primary_key=True),
+            sqlalchemy.Column('price', sqlalchemy.Float),
             sqlalchemy.Column('size', sqlalchemy.Float),
             sqlalchemy.Column('side', sqlalchemy.String(length=4)),
-            sqlalchemy.Column('execution_time', sqlalchemy.dialects.mysql.DATETIME(fsp=6), unique=True),
+            sqlalchemy.Column('execution_time', sqlalchemy.dialects.mysql.DATETIME(fsp=6)),
             extend_existing=False,
         )
 
-def bulk_insert_trade(exchange_name: str, symbol: str, trades: List[Trade]) -> None:
+async def bulk_insert_trade(exchange_name: str, symbol: str, trades: List[Trade]) -> None:
     """
     trades: List of dictionaries containing trade data
     """
@@ -33,11 +34,17 @@ def bulk_insert_trade(exchange_name: str, symbol: str, trades: List[Trade]) -> N
     init_dbtrade_schema(exchange_name, symbol)
     Base.metadata.create_all(_engine)
 
-    trade_data = [{"size": trade.size, "side": trade.side, "execution_time": trade.execution_time} for trade in trades]
+    trade_data = [{
+        "id": trade.id,
+        "price": trade.price,
+        "size": trade.size,
+        "side": trade.side.value,
+        "execution_time": trade.execution_time}
+        for trade in trades]
 
     sql = sqlalchemy.text(f"""
-          INSERT IGNORE INTO {table_name} (size, side, execution_time)
-          VALUES (:size, :side, :execution_time)
+          INSERT IGNORE INTO {table_name} (id, price, size, side, execution_time)
+          VALUES (:id, :price, :size, :side, :execution_time)
           """)
     _session.execute(sql, trade_data)
     _session.commit()

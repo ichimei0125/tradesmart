@@ -5,46 +5,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 
-
 from config.config import Config
-from api.db.schemas import *
+from api.db.common import _get_engine, Base
+from api.db import *
 
 
-Base = declarative_base()
-
-_engine: Engine = None
-_Session: sessionmaker = None
-
-def _get_engine() -> Engine:
-    global _engine
-    if _engine is None:
-        connection_string = Config().connection_string
-        _engine = sqlalchemy.create_engine(
-            connection_string,
-            pool_size=5,
-            max_overflow=10,
-            pool_timeout=30,
-            pool_recycle=1800,
-            echo=True
-        )
-    return _engine
-
-
-def _create_sessison(engine: Engine) -> Session:
-    global _Session
-    if _Session is None:
-        _Session = sessionmaker(bind=engine)
-    return _Session()
-
-
-def init_table(exchange_symbols: Dict[str, List]) -> None:
-    """
-    params:
-      [exchange_name: [symbol1, symbol2, ....]]
-    """
-    engine = _get_engine()
-
-    for exchange, symbols in exchange_symbols.items():
-        for symbol in symbols:
-            Trade.set_table_name(exchange, symbol)
-    Base.metadata.create_all(engine)
+# def init_table(exchange_symbols: Dict[str, List]) -> None:
+#     """
+#     params:
+#       [exchange_name: [symbol1, symbol2, ....]]
+#     """
+#     engine = _get_engine()
+#     Base.metadata.create_all(engine)
