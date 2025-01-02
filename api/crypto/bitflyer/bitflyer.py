@@ -77,10 +77,19 @@ class Bitflyer(Exchange):
                     break
 
     def _api_2_db_trade(self, data) -> Trade:
+        _side:Side
+        match data['side']:
+            case Side.SELL.value:
+                _side = Side.SELL
+            case Side.BUY.value:
+                _side = Side.BUY
+            case _:
+                _side = Side.NONE
+
         new_trade = Trade()
         new_trade.id = data['id']
         new_trade.size = data['amount']
-        new_trade.side = Side.SELL if data['side'] == 'sell' else Side.BUY
+        new_trade.side = _side
         new_trade.execution_time = self._str_2_datetime(data['datetime'])
         new_trade.price = data['price']
         return new_trade

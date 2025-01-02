@@ -4,6 +4,7 @@ from datetime import datetime
 class Side(Enum):
     BUY = 'buy'
     SELL = 'sell'
+    NONE = ''
 
 class Trade:
     # exchange: str
