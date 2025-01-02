@@ -9,6 +9,7 @@ class Trade:
     exchange: str
     symbol: str
     side: Side
+    size: float
     execution_time: datetime
 
 class CandleStick:
