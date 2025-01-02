@@ -6,8 +6,8 @@ class Side(Enum):
     SELL = 'sell'
 
 class Trade:
-    exchange: str
-    symbol: str
+    # exchange: str
+    # symbol: str
     side: Side
     size: float
     execution_time: datetime
