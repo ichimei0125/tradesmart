@@ -9,10 +9,12 @@ from api.db.trade import bulk_insert_trade, get_trades, get_lastest_trade_time
 from tradeengine.models.trade import Trade, Side
 from tools.common import get_now, local_2_utc
 
+# public api limit: 500/5min
 _public_cnt:int = 0
 _public_datetime:Optional[datetime] = None
-_api_lock = Lock() 
-_api_condition = Condition(_api_lock)
+_public_api_lock = Lock() 
+_public_api_condition = Condition(_public_api_lock)
+# TODO: private api limit 500/5min (not trade so many times)?
 
 class Bitflyer(Exchange):
     def __init__(self, symbols: List[str], dry_run: List[str]):
@@ -20,13 +22,17 @@ class Bitflyer(Exchange):
         self.exchange = ccxt.bitflyer()
         self.exchange.enableRateLimit = False
 
-    def _api_limit(self) -> None:
+        # trading frequency 
+        self.is_realtime:bool = False
+        self.fetch_data_interval_minute:int = 1
+
+    def _public_api_limit(self) -> None:
         """call this method before call api"""
         global _public_cnt, _public_datetime
         
         now = get_now()
 
-        with _api_lock:
+        with _public_api_lock:
             if _public_datetime is None or (now - _public_datetime > timedelta(minutes=5)):
                 _public_datetime = now
                 _public_cnt = 0
@@ -34,15 +40,15 @@ class Bitflyer(Exchange):
             # over limit
             if _public_cnt >= (500 - 5):
                 wait_time = 300 - (now - _public_datetime).total_seconds()
-                print(f"API limit reached. Waiting for {wait_time:.2f} seconds.")
+                print(f"Public API limit reached. Waiting for {wait_time:.2f} seconds.")
                 if wait_time > 0:
-                    _api_condition.wait(timeout=wait_time)
+                    _public_api_condition.wait(timeout=wait_time)
 
                 _public_datetime = get_now()
                 _public_cnt = 0
 
             _public_cnt += 1
-            _api_condition.notify_all()
+            _public_api_condition.notify_all()
 
     def fetch_trades(self, since:Optional[datetime]=None) -> Dict[str, List[Trade]]:
         now = get_now()
@@ -63,7 +69,7 @@ class Bitflyer(Exchange):
             trades:List[Trade] = []
             before_id = None
             while True:
-                self._api_limit()
+                self._public_api_limit()
                 _trades:List
                 if not before_id:
                     _trades = self.exchange.fetch_trades(symbol, limit=500) # max limit for bitflyer is 500

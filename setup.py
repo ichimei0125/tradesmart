@@ -14,6 +14,7 @@ setup(
         "pytest",
         "SQLAlchemy==2.0",
         "mariadb==1.1",
+        "TA-Lib==0.6",
     ],
     # entry_points={
     #     "console_scripts": [
