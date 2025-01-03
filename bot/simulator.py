@@ -39,6 +39,7 @@ class Simulator:
         tmp_trades = []
         for trade in reversed(trades):
             tmp_trades.insert(0, trade)
+            tmp_trades = tmp_trades[:1000] # TODO
             if trade.execution_time > end_time:
                 cached_candlestick, _ = ConvertTradeToCandleStick(tmp_trades, cached_candlestick).by_minutes(3)
                 trade_status = simple_strategy(cached_candlestick)

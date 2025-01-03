@@ -59,6 +59,6 @@ def simple_strategy(candlesticks:List[CandleStick]) -> TradeStatus:
 
     if indicators[1].Stoch_D > 75 or indicators[1].Stoch_K > 75:
         if candlesticks[1].close >= indicators[1].BBBands_Plus_2 and candlesticks[0].close <= indicators[0].BBBands_Plus_2:
-            return TradeStatus.BUY
+            return TradeStatus.SELL
 
     return TradeStatus.DO_NOTHING
