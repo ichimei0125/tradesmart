@@ -49,11 +49,11 @@ def sort_trades_desc(trades: List[Trade]) -> List[Trade]:
         return _sort_trades_desc_heapq(trades)
 
 def _sort_trades_desc(trades: List[Trade]) -> List[Trade]:
-    """sort trades by execution_time DESC, use this when len(trades) < 10000"""
+    """sort trades by execution_time DESC, use this when small data"""
     return sorted(trades, key=lambda trade: trade.execution_time, reverse=True)
 
 def _sort_trades_desc_heapq(trades: List[Trade]) -> List[Trade]:
-    """sort trades by execution_time DESC, use this when len(trades) > 10000"""
+    """sort trades by execution_time DESC, use this when big data"""
     heap = []
     for trade in trades:
         heapq.heappush(heap, (-trade.execution_time.timestamp(), trade))
