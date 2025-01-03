@@ -28,8 +28,11 @@ class CandleStick:
     close: float
     high: float
     low: float
-    volume: int
+    volume: float
     opentime: datetime # 最初取引の時刻。
+
+    def __post_init__(self):
+        self.volume = round(self.volume, 3)
 
 def sort_trades_desc(trades: List[Trade]) -> List[Trade]:
     if all(
@@ -69,6 +72,7 @@ def trade_2_candlestick_minutes(trades:List[Trade], minute:int, cached:Optional[
 
     candlesticks = []
     tmp_trades_price = []
+    tmp_volume:float = 0
     for i in range(len(trades)):
         if trades[i].execution_time < open_time:
             new_candlestick = CandleStick(
@@ -76,7 +80,7 @@ def trade_2_candlestick_minutes(trades:List[Trade], minute:int, cached:Optional[
                 close=tmp_trades_price[0],
                 high=np.max(tmp_trades_price),
                 low=np.min(tmp_trades_price),
-                volume=tmp_trades_price.size,
+                volume=tmp_volume,
                 opentime=open_time,
             )
             candlesticks.append(new_candlestick)
@@ -88,6 +92,7 @@ def trade_2_candlestick_minutes(trades:List[Trade], minute:int, cached:Optional[
             break
 
         tmp_trades_price = np.append(tmp_trades_price, trades[i].price)
+        tmp_volume += trades[i].size
     return candlesticks
 
 def trade_2_candlestick_days(trades:List[Trade], day:int, cached:Optional[List[CandleStick]]) -> List[CandleStick]:
@@ -96,6 +101,7 @@ def trade_2_candlestick_days(trades:List[Trade], day:int, cached:Optional[List[C
 
     candlesticks = []
     tmp_trades_price = []
+    tmp_volume:float = 0
     for i in range(len(trades)):
         if trades[i].execution_time < open_time:
             new_candlestick = CandleStick(
@@ -103,7 +109,7 @@ def trade_2_candlestick_days(trades:List[Trade], day:int, cached:Optional[List[C
                 close=tmp_trades_price[0],
                 high=np.max(tmp_trades_price),
                 low=np.min(tmp_trades_price),
-                volume=tmp_trades_price.size,
+                volume=tmp_volume,
                 opentime=open_time,
             )
             candlesticks.append(new_candlestick)
@@ -115,5 +121,6 @@ def trade_2_candlestick_days(trades:List[Trade], day:int, cached:Optional[List[C
             break
 
         tmp_trades_price = np.append(tmp_trades_price, trades[i].price)
+        tmp_volume += trades[i].size
     return candlesticks
 
