@@ -51,9 +51,9 @@ class Bitflyer(Exchange):
 
         # histroy data are too many, no multi process is better
         for symbol in self.symbols:
+            # TODO: consider missing data in db
             # get db lastest data ~ now
-            loop = asyncio.get_event_loop()
-            _lastest_time = loop.run_until_complete(get_lastest_trade_time(self.exchange_name, symbol))
+            _lastest_time = asyncio.run(get_lastest_trade_time(self.exchange_name, symbol))
             if _lastest_time is not None:
                 since = _lastest_time
 
@@ -74,12 +74,10 @@ class Bitflyer(Exchange):
                 lastest_datetime = __trades[0].execution_time
 
                 if len(trades) >= 10000:
-                    loop = asyncio.get_event_loop()
-                    loop.run_until_complete(bulk_insert_trade(self.exchange_name, symbol, trades))
+                    asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
                     trades = []
                 if lastest_datetime <= since:
-                    loop = asyncio.get_event_loop()
-                    loop.run_until_complete(bulk_insert_trade(self.exchange_name, symbol, trades))
+                    asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
                     break
 
     def _api_2_db_trade(self, data) -> Trade:
