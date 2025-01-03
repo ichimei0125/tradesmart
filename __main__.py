@@ -1,7 +1,7 @@
 from api.crypto.exchange import Exchange
 from api.crypto.bitflyer.bitflyer import Bitflyer
 from config.config import Config
-from tradeengine.models.trade import trade_2_candlestick_minutes
+from tradeengine.models.trade import ConverterTradeCandleStick
 
 def main() -> None:
     # init
@@ -11,7 +11,7 @@ def main() -> None:
 
     candle_sticks = None
     for symbol, trades in symbol_trades_dict.items():
-        candle_sticks = trade_2_candlestick_minutes(trades, 3, candle_sticks)
+        candle_sticks = ConverterTradeCandleStick(trades, candle_sticks).by_minutes(3)
         pass
 
     
