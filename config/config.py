@@ -22,7 +22,7 @@ class Config:
                 # exchange only
                 match exchange_name:
                     case 'bitflyer':
-                        self._bitflyer = Bitflyer(info['api_key'], info['api_secret'], symbols, dry_run)
+                        self._bitflyer = Bitflyer(info['api_key'], info['api_secret'], symbols, dry_run, info['invest_money'], info['loss_cut'])
                     case _:
                         raise NotImplementedError(f'{exchange_name} in {self._config_path} not implemented')
 
@@ -40,7 +40,9 @@ class ExchangeBase():
         self.dry_run_symbols = dry_run_symbols
 
 class Bitflyer(ExchangeBase):
-    def __init__(self, api_key:str, api_secret:str, symbols:List[str], dry_run:List[str]):
+    def __init__(self, api_key:str, api_secret:str, symbols:List[str], dry_run:List[str], invest_money:float, loss_cut:float):
         self.api_key = api_key
         self.api_secret = api_secret
+        self.invest_money = invest_money
+        self.loss_cut = loss_cut
         super().__init__(symbols, dry_run)

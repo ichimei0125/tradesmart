@@ -6,5 +6,7 @@ exchange:
       - BTC_JPY
       - XRP_JPY
     dry_run: []
+    invest_money: 10000
+    loss_cut: 40000
 
 connection_string: "mariadb+mariadbconnector://tradebot:{your_password}@127.0.0.1:3306/tradedb"

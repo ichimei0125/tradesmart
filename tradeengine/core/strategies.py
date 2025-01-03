@@ -52,4 +52,13 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
 
 def simple_strategy(candlesticks:List[CandleStick]) -> TradeStatus:
     indicators = get_indicator(candlesticks)
-    pass
+
+    if indicators[1].Stoch_D < 25 or indicators[1].Stoch_K < 25:
+        if candlesticks[1].close <= indicators[1].BBBands_Minus_2 and candlesticks[0].close >= indicators[0].BBBands_Minus_2:
+            return TradeStatus.BUY
+
+    if indicators[1].Stoch_D > 75 or indicators[1].Stoch_K > 75:
+        if candlesticks[1].close >= indicators[1].BBBands_Plus_2 and candlesticks[0].close <= indicators[0].BBBands_Plus_2:
+            return TradeStatus.BUY
+
+    return TradeStatus.DO_NOTHING
