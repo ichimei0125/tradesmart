@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 from datetime import datetime
 
@@ -6,6 +7,7 @@ class Side(Enum):
     SELL = 'sell'
     NONE = ''
 
+@dataclass
 class Trade:
     # exchange: str
     # symbol: str
@@ -15,6 +17,7 @@ class Trade:
     execution_time: datetime
     price: float
 
+@dataclass
 class CandleStick:
     # exchange: str
     # symbol: str

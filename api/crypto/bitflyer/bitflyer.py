@@ -5,7 +5,7 @@ import ccxt
 import asyncio
 
 from api.crypto.exchange import Exchange
-from api.db.trade import bulk_insert_trade
+from api.db.trade import bulk_insert_trade, get_trades, get_lastest_trade_time
 from tradeengine.models.trade import Trade, Side
 from tools.common import get_now, local_2_utc
 
@@ -51,6 +51,12 @@ class Bitflyer(Exchange):
 
         # histroy data are too many, no multi process is better
         for symbol in self.symbols:
+            # get db lastest data ~ now
+            loop = asyncio.get_event_loop()
+            _lastest_time = loop.run_until_complete(get_lastest_trade_time(self.exchange_name, symbol))
+            if _lastest_time is not None:
+                since = _lastest_time
+
             trades:List[Trade] = []
             before_id = None
             while True:
@@ -86,13 +92,13 @@ class Bitflyer(Exchange):
             case _:
                 _side = Side.NONE
 
-        new_trade = Trade()
-        new_trade.id = data['id']
-        new_trade.size = data['amount']
-        new_trade.side = _side
-        new_trade.execution_time = self._str_2_datetime(data['datetime'])
-        new_trade.price = data['price']
-        return new_trade
+        return Trade(
+            id = data['id'],
+            size = data['amount'],
+            side = _side,
+            execution_time = self._str_2_datetime(data['datetime']),
+            price = data['price'],
+        )
 
     def _str_2_datetime(self, s:str) -> datetime:
         return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
