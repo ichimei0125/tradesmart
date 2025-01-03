@@ -6,8 +6,9 @@ import asyncio
 
 from api.crypto.exchange import Exchange
 from api.db.trade import bulk_insert_trade, get_trades, get_lastest_trade_time
-from tradeengine.models.trade import Trade, Side
+from tradeengine.models.trade import CandleStick, Trade, Side, ConvertTradeToCandleStick
 from tools.common import get_now, local_2_utc
+from tools.constants import MarketInfo
 
 # public api limit: 500/5min
 _public_cnt:int = 0
@@ -25,6 +26,10 @@ class Bitflyer(Exchange):
         # trading frequency 
         self.is_realtime:bool = False
         self.fetch_data_interval_minute:int = 1
+
+        # cache
+        self.cache_trades:List[Trade]
+        self.cache_candlesticks:List[Trade]
 
     def _public_api_limit(self) -> None:
         """call this method before call api"""
@@ -51,6 +56,7 @@ class Bitflyer(Exchange):
             _public_api_condition.notify_all()
 
     def fetch_trades(self, since:Optional[datetime]=None) -> Dict[str, List[Trade]]:
+        # TODO cache
         now = get_now()
         if not since:
             since = now - timedelta(days=30) # max histroy of bitflyer is past 31 days
@@ -58,6 +64,7 @@ class Bitflyer(Exchange):
         last_days = (local_2_utc(now) - since).days
 
         res = {}
+        # TODO: multi process?
         # histroy data are too many, no multi process is better
         for symbol in self.symbols:
             # TODO: consider missing data in db
@@ -90,6 +97,21 @@ class Bitflyer(Exchange):
                     break
             data = asyncio.run(get_trades(self.exchange_name, symbol, last_days))
             res[symbol] = data
+        return res
+
+    def fetch_candlesticks(self, since) -> Dict[str, Dict[timedelta, List[CandleStick]]]:
+        if since is None:
+            last_minutes = (MarketInfo.CANDLESTICK_NUMS + 2) * self.fetch_data_interval_minute
+            since = get_now() - timedelta(minutes=last_minutes)
+        since = local_2_utc(since)
+        trades_dict = self.fetch_trades(since=since)
+
+        # TODO: multi candlestick
+        res = {}
+        for symbol, trades in trades_dict.items():
+            candlesticks, interval = ConvertTradeToCandleStick(trades).by_minutes(3)
+            res[symbol] = {interval:candlesticks}
+
         return res
 
     def _api_2_db_trade(self, data) -> Trade:

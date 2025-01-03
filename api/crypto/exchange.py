@@ -27,8 +27,8 @@ class Exchange(ABC):
         pass
 
     @abstractmethod
-    def fetch_candlesticks(self) -> Dict[str, Dict[timedelta, List[CandleStick]]]:
+    def fetch_candlesticks(self, since:Optional[datetime]) -> Dict[str, Dict[timedelta, List[CandleStick]]]:
         """
-        since: CANDLESTICK_NUMS(defined at tools/constants.py) * self.fetch_data_interval_minute
+        since: if none, CANDLESTICK_NUMS(defined at tools/constants.py) * self.fetch_data_interval_minute
         """
         pass

@@ -1,10 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime, timedelta
 import heapq
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import numpy as np
-from sqlalchemy import Tuple
 
 class Side(Enum):
     BUY = 'buy'
@@ -13,8 +12,6 @@ class Side(Enum):
 
 @dataclass
 class Trade:
-    # exchange: str
-    # symbol: str
     id: str
     side: Side
     size: float
@@ -22,9 +19,17 @@ class Trade:
     price: float
 
 @dataclass
+class Indicator:
+    BBBands_Plus_2: float
+    BBBands_Plus_3: float
+    BBBands_Minus_2: float
+    BBBands_Minus_3: float
+    Stoch_K: float
+    Stoch_D: float
+    opentime: datetime # 最初取引の時刻。
+
+@dataclass
 class CandleStick:
-    # exchange: str
-    # symbol: str
     open: float
     close: float
     high: float
