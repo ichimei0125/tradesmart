@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 from threading import Lock, Condition
 import ccxt
 import asyncio
@@ -44,11 +44,14 @@ class Bitflyer(Exchange):
             _public_cnt += 1
             _api_condition.notify_all()
 
-    def fetch_history_data(self, since:Optional[datetime]=None):
+    def fetch_trades(self, since:Optional[datetime]=None) -> Dict[str, List[Trade]]:
+        now = get_now()
         if not since:
-            since = get_now() - timedelta(days=30) # max histroy of bitflyer is past 31 days
+            since = now - timedelta(days=30) # max histroy of bitflyer is past 31 days
         since = local_2_utc(since)
+        last_days = (local_2_utc(now) - since).days
 
+        res = {}
         # histroy data are too many, no multi process is better
         for symbol in self.symbols:
             # TODO: consider missing data in db
@@ -79,6 +82,9 @@ class Bitflyer(Exchange):
                 if lastest_datetime <= since:
                     asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
                     break
+            data = asyncio.run(get_trades(self.exchange_name, symbol, last_days))
+            res[symbol] = data
+        return res
 
     def _api_2_db_trade(self, data) -> Trade:
         _side:Side

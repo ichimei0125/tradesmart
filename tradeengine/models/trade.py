@@ -3,7 +3,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 import heapq
 from typing import List, Optional
-from numpy import np
+import numpy as np
 
 class Side(Enum):
     BUY = 'buy'
@@ -68,26 +68,26 @@ def trade_2_candlestick_minutes(trades:List[Trade], minute:int, cached:Optional[
     open_time = trades[0].execution_time.replace(minute=lastest_open_time_minute, second=0, microsecond=0)
 
     candlesticks = []
-    tmp_trades = []
+    tmp_trades_price = []
     for i in range(len(trades)):
         if trades[i].execution_time < open_time:
             new_candlestick = CandleStick(
-                open=tmp_trades[0],
-                close=tmp_trades[-1],
-                high=np.max(tmp_trades),
-                low=np.min(tmp_trades),
-                volume=tmp_trades.size,
+                open=tmp_trades_price[-1],
+                close=tmp_trades_price[0],
+                high=np.max(tmp_trades_price),
+                low=np.min(tmp_trades_price),
+                volume=tmp_trades_price.size,
                 opentime=open_time,
             )
             candlesticks.append(new_candlestick)
             open_time -= timedelta(minutes=minute)
-            tmp_trades = []
+            tmp_trades_price = []
 
         if cached and open_time == cached[0].opentime: # if open_time != cached[0].opentime means different time scale, won't use cached data
             candlesticks += cached[1:]
             break
 
-        tmp_trades = np.append(tmp_trades, trades[i])
+        tmp_trades_price = np.append(tmp_trades_price, trades[i].price)
     return candlesticks
 
 def trade_2_candlestick_days(trades:List[Trade], day:int, cached:Optional[List[CandleStick]]) -> List[CandleStick]:
@@ -95,25 +95,25 @@ def trade_2_candlestick_days(trades:List[Trade], day:int, cached:Optional[List[C
     open_time = trades[0].execution_time.replace(hour=0 ,minute=0, second=0, microsecond=0)
 
     candlesticks = []
-    tmp_trades = []
+    tmp_trades_price = []
     for i in range(len(trades)):
         if trades[i].execution_time < open_time:
             new_candlestick = CandleStick(
-                open=tmp_trades[0],
-                close=tmp_trades[-1],
-                high=np.max(tmp_trades),
-                low=np.min(tmp_trades),
-                volume=tmp_trades.size,
+                open=tmp_trades_price[-1],
+                close=tmp_trades_price[0],
+                high=np.max(tmp_trades_price),
+                low=np.min(tmp_trades_price),
+                volume=tmp_trades_price.size,
                 opentime=open_time,
             )
             candlesticks.append(new_candlestick)
             open_time -= timedelta(days=day)
-            tmp_trades = []
+            tmp_trades_price = []
 
         if cached and open_time == cached[0].opentime: # if open_time != cached[0].opentime means different time scale, won't use cached data
             candlesticks += cached[1:]
             break
 
-        tmp_trades = np.append(tmp_trades, trades[i])
+        tmp_trades_price = np.append(tmp_trades_price, trades[i].price)
     return candlesticks
 

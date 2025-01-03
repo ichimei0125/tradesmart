@@ -13,7 +13,7 @@ class Exchange(ABC):
         return symbol in self.dry_run
 
     @abstractmethod
-    def fetch_history_data(self, since:Optional[datetime]) -> None:
+    def fetch_trades(self, since:Optional[datetime]) -> None:
         """
         param:
          - since: max history data, if is None
