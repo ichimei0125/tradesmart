@@ -67,6 +67,8 @@ def _sort_trades_desc_heapq(trades: List[Trade]) -> List[Trade]:
 
 def trade_2_candlestick_minutes(trades:List[Trade], minute:int, cached:Optional[List[CandleStick]]=None) -> List[CandleStick]:
     trades = sort_trades_desc(trades)
+    if not (minute > 0 and minute <= 60):
+        raise ValueError(f'minute must in 1~60, wrong minute: {minute}')
     lastest_open_time_minute = (trades[0].execution_time.minute // minute) * minute
     open_time = trades[0].execution_time.replace(minute=lastest_open_time_minute, second=0, microsecond=0)
 
