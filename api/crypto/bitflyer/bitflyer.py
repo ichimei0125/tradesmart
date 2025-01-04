@@ -83,11 +83,11 @@ class Bitflyer(Exchange):
                 else:
                     _trades = self.exchange.fetch_trades(symbol, limit=500, params={'before': before_id}) # max limit for bitflyer is 500
 
-                __trades = [self._api_2_db_trade(_t) for _t in _trades]
-                trades.extend(__trades)
+                _trades_ = [self._api_2_db_trade(_t) for _t in _trades]
+                trades.extend(_trades_)
 
                 before_id = _trades[0]['id']
-                lastest_datetime = __trades[0].execution_time
+                lastest_datetime = _trades_[0].execution_time
 
                 if len(trades) >= 10000:
                     asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))

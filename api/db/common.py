@@ -21,7 +21,7 @@ def _get_engine() -> Engine:
             max_overflow=10,
             pool_timeout=30,
             pool_recycle=1800,
-            echo=True
+            # echo=True
         )
     return _engine
 

@@ -8,6 +8,3 @@ def get_now() -> datetime:
 
 def local_2_utc(local: datetime) -> datetime:
     return local.astimezone(timezone.utc)
-
-def datetime_to_str(date:datetime) -> str:
-    return date.strftime('%Y%m%d %H:%M:%S')
