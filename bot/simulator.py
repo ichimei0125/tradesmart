@@ -27,8 +27,7 @@ class Simulator:
 
         data = self.exchange.fetch_trades(since)
 
-        worker_num = min(len(data), cpu_count())
-        with concurrent.futures.ProcessPoolExecutor(max_workers=worker_num) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count()) as executor:
             futures = [executor.submit(self._engin_simulatro_run, trades, symbol) for symbol, trades in data.items()]
             concurrent.futures.wait(futures)
 
