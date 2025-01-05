@@ -51,6 +51,7 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
 
 
 def simple_strategy(candlesticks:List[CandleStick]) -> TradeStatus:
+    """bascily for test, do not use this for real trading"""
     indicators = get_indicator(candlesticks)
 
     if indicators[1].Stoch_D < 25 or indicators[1].Stoch_K < 25:

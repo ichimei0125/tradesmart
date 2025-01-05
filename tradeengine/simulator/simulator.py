@@ -63,7 +63,7 @@ class Simulator:
             _log.warning(f'LOSS CUT: {self.account_money}')
         
         s_time = datetime_to_str(time)
-        _log.info(f'{s_time}, BUY, {price:.2f}, {_size:}, {self.account_coin:}, {self.account_money:.2f}')
+        _log.info(f'{s_time}, BUY, {price:.2f}, {_size}, {self.account_coin}, {self.account_money:.2f}')
 
     def sim_sell(self, time, price:float, size:float, _log:log) -> str:
         if self.account_coin < 0.001:
@@ -77,7 +77,7 @@ class Simulator:
             _log.warning(f'LOSS CUT: {self.account_money}')
 
         s_time = datetime_to_str(time)
-        _log.info(f'{s_time}, SELL, {price:.2f}, {size:}, {self.account_coin:}, {self.account_money:.2f}')
+        _log.info(f'{s_time}, SELL, {price:.2f}, {size}, {self.account_coin}, {self.account_money:.2f}')
 
 
 

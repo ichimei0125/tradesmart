@@ -9,8 +9,8 @@ exchange:
       - XLM_JPY
       - MONA_JPY
       - ELF_JPY
-      - ETH_BTC
-      - BCH_BTC 
+      # - ETH_BTC
+      # - BCH_BTC 
       - FX_BTC_JPY
     dry_run: []
     invest_money: 10000

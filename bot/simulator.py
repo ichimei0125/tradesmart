@@ -11,6 +11,7 @@ from tradeengine.simulator.simulator import Simulator as EngineSimulator
 from tradeengine.tools.convertor import datetime_to_str
 
 import concurrent.futures
+from multiprocessing import cpu_count
 
 class Simulator:
     def __init__(self, exchagne:Exchange):
@@ -26,7 +27,8 @@ class Simulator:
 
         data = self.exchange.fetch_trades(since)
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+        worker_num = min(len(data), cpu_count())
+        with concurrent.futures.ProcessPoolExecutor(max_workers=worker_num) as executor:
             futures = [executor.submit(self._engin_simulatro_run, trades, symbol) for symbol, trades in data.items()]
             concurrent.futures.wait(futures)
 
