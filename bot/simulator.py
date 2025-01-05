@@ -7,6 +7,7 @@ from api.crypto.exchange import Exchange
 from tools.common import get_now, local_2_utc
 from tools.constants import MarketInfo
 from tradeengine.models.trade import Trade
+from tradeengine.models.invest import FixedInvest, Invest
 from tradeengine.simulator.simulator import Simulator as EngineSimulator
 from tradeengine.tools.convertor import datetime_to_str
 
@@ -19,24 +20,27 @@ class Simulator:
         self.config = Config()
 
 
-    def run(self, since:Optional[datetime]=None) -> None:
-        """since: default last 90 days"""
-        if not since:
-            since = get_now() - timedelta(days=90)
+    def run(self, account_money:int=50000, last_days:int=90) -> None:
+        since = get_now() - timedelta(days=last_days)
         since = local_2_utc(since)
 
         data = self.exchange.fetch_trades(since)
 
+        invest_stragety = FixedInvest(
+            balance=account_money,
+            loss_cut=self.config.bitflyer.loss_cut,
+            invest=self.config.bitflyer.invest_money,
+        )
+
         with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count()) as executor:
-            futures = [executor.submit(self._engin_simulatro_run, trades, symbol) for symbol, trades in data.items()]
+            futures = [executor.submit(self._engin_simulator_run, trades, symbol, invest_stragety) for symbol, trades in data.items()]
             concurrent.futures.wait(futures)
 
-    def _engin_simulatro_run(self, trades:List[Trade], symbol:str, init_money:int=50000) -> None:
+    def _engin_simulator_run(self, trades:List[Trade], symbol:str, invest_stragety:Invest) -> None:
+
         engine_simulator = EngineSimulator(
             trades=trades,
-            init_money=init_money,
-            invest_money=self.config.bitflyer.invest_money,
-            loss_cut=self.config.bitflyer.loss_cut,
+            invest=invest_stragety
         )
 
         engine_simulator.run(MarketInfo.CANDLESTICK_NUMS, 3, self.exchange.fetch_data_interval_minute, self.exchange.exchange_name, symbol)

@@ -4,17 +4,19 @@ import os
 from typing import List, Optional
 from tradeengine.core.strategies import TradeStatus, simple_strategy
 from tradeengine.models.trade import ConvertTradeToCandleStick, Trade
+from tradeengine.models.invest import *
 from tradeengine.tools.convertor import datetime_to_str
 from tradeengine.tools.common import get_unique_name
 from tradeengine.tools.log import log
 
 class Simulator:
-    def __init__(self, trades: List[Trade], init_money:float=50000, loss_cut:float=40000, invest_money:float=10000, is_margin:bool=False):
+    def __init__(self, trades: List[Trade], invest: Invest, is_margin:bool=False):
         self.trades = trades
-        self.account_money = init_money
+        self.account_money = invest.balance
         self.account_coin:float = 0.0
-        self.loss_cut = loss_cut
-        self.invest_money = invest_money
+        self.loss_cut = invest.loss_cut
+
+        self.invest_strategy = invest
 
         # TODO: margin
         # TODO: realtime
@@ -39,9 +41,9 @@ class Simulator:
                 cached_candlestick, _ = ConvertTradeToCandleStick(tmp_trades, cached_candlestick).by_minutes(candlestick_interval)
                 trade_status = simple_strategy(cached_candlestick)
                 if trade_status == TradeStatus.BUY:
-                    self.sim_buy(trade.execution_time, cached_candlestick[0].close, self.invest_money, _log)
+                    self.sim_buy(trade.execution_time, cached_candlestick[0].close, self._get_buy_money(), _log)
                 elif trade_status == TradeStatus.SELL:
-                    self.sim_sell(trade.execution_time, cached_candlestick[0].close, self.account_coin, _log)
+                    self.sim_sell(trade.execution_time, cached_candlestick[0].close, self._get_sell_size(), _log)
                 end_time += timedelta(minutes=fetch_interval)
                 # update tmp_trades
                 start_time = end_time - timedelta(minutes=period)
@@ -51,6 +53,21 @@ class Simulator:
                     else:
                         break
 
+    def _get_buy_money(self) -> float:
+        _type = type(self.invest_strategy)
+        if _type is FixedInvest:
+            return self.invest_strategy.invest
+        else:
+            raise TypeError(f'need type Invest, type: {_type}')
+
+    def _get_sell_size(self) -> float:
+        _type = type(self.invest_strategy)
+        if _type is FixedInvest:
+            return self.account_coin
+        else:
+            raise TypeError(f'need type Invest, type: {_type}')
+
+
     def sim_buy(self, time, price:float, money:float, _log:log) -> str:
         if self.account_money <= money:
             return
@@ -59,7 +76,7 @@ class Simulator:
         self.account_money -= money
 
         # loss_cut, for margin
-        if self.account_coin < 0.001 and self.account_money < self.loss_cut:
+        if self.loss_cut and self.account_coin < 0.001 and self.account_money < self.loss_cut:
             _log.warning(f'LOSS CUT: {self.account_money}')
         
         s_time = datetime_to_str(time)
@@ -73,7 +90,7 @@ class Simulator:
         self.account_money += (price * size)
 
         # loss_cut
-        if self.account_coin < 0.001 and self.account_money < self.loss_cut:
+        if self.loss_cut and self.account_coin < 0.001 and self.account_money < self.loss_cut:
             _log.warning(f'LOSS CUT: {self.account_money}')
 
         s_time = datetime_to_str(time)
