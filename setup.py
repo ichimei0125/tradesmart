@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="tradesmart",
-    version="0.0.1",
+    version="0.0.2",
     author="ichimei0125",
     description="A cryptocurrency and stock trading bot with simulation support",
     # packages=find_packages(),
