@@ -2,6 +2,7 @@
 .vscode
 .DS_Store
 config.yaml
+log/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

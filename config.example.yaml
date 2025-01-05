@@ -5,6 +5,13 @@ exchange:
     symbols:
       - BTC_JPY
       - XRP_JPY
+      - ETH_JPY
+      - XLM_JPY
+      - MONA_JPY
+      - ELF_JPY
+      - ETH_BTC
+      - BCH_BTC 
+      - FX_BTC_JPY
     dry_run: []
     invest_money: 10000
     loss_cut: 40000

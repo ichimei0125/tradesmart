@@ -10,10 +10,10 @@ def main() -> None:
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
     symbol_trades_dict = e.fetch_trades()
 
-    candle_sticks = None
-    for symbol, trades in symbol_trades_dict.items():
-        candle_sticks = ConvertTradeToCandleStick(trades, candle_sticks).by_minutes(3)
-        pass
+    # candle_sticks = None
+    # for symbol, trades in symbol_trades_dict.items():
+    #     candle_sticks = ConvertTradeToCandleStick(trades, candle_sticks).by_minutes(3)
+    #     pass
 
 
 def simulator() -> None:
