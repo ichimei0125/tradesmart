@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import os
 from typing import List, Optional
 from tradeengine.core.strategies import TradeStatus, simple_strategy
-from tradeengine.models.trade import ConvertTradeToCandleStick, Trade
+from tradeengine.models.trade import ConvertTradeToCandleStick, Trade, sort_trades_desc
 from tradeengine.models.invest import *
 from tradeengine.tools.convertor import datetime_to_str
 from tradeengine.tools.common import get_unique_name
@@ -11,7 +11,7 @@ from tradeengine.tools.log import log
 
 class Simulator:
     def __init__(self, trades: List[Trade], invest: Invest, is_margin:bool=False):
-        self.trades = trades
+        self.trades = sort_trades_desc(trades)
         self.account_money = invest.balance
         self.account_coin:float = 0.0
         self.loss_cut = invest.loss_cut
@@ -38,7 +38,7 @@ class Simulator:
         for trade in reversed(trades):
             tmp_trades.insert(0, trade) # O(n), remove unused trades
             if trade.execution_time > end_time:
-                cached_candlestick, _ = ConvertTradeToCandleStick(tmp_trades, cached_candlestick).by_minutes(candlestick_interval)
+                cached_candlestick, _ = ConvertTradeToCandleStick(tmp_trades, cached_candlestick, check_trades_order=False).by_minutes(candlestick_interval)
                 trade_status = simple_strategy(cached_candlestick)
                 if trade_status == TradeStatus.BUY:
                     self.sim_buy(trade.execution_time, cached_candlestick[0].close, self._get_buy_money(), _log)

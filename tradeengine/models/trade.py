@@ -72,8 +72,10 @@ def _sort_trades_desc_heapq(trades: List[Trade]) -> List[Trade]:
     return sorted_trades
 
 class ConvertTradeToCandleStick:
-    def __init__(self, trades:List[Trade], cached:Optional[List[CandleStick]]=None):
-        self.trades = sort_trades_desc(trades)
+    def __init__(self, trades:List[Trade], cached:Optional[List[CandleStick]]=None, check_trades_order:bool=True):
+        if check_trades_order:
+            trades = sort_trades_desc(trades)
+        self.trades = trades
         self.cached = cached
 
     def by_seconds(self, second:int) -> Tuple[List[CandleStick], timedelta]:
