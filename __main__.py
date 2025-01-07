@@ -1,8 +1,6 @@
 from api.crypto.exchange import Exchange
 from api.crypto.bitflyer.bitflyer import Bitflyer
 from config.config import Config
-from tradeengine.models.trade import ConvertTradeToCandleStick
-from bot.simulator import Simulator
 
 def main() -> None:
     # init
@@ -10,16 +8,12 @@ def main() -> None:
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
     symbol_trades_dict = e.fetch_trades()
 
-    # candle_sticks = None
-    # for symbol, trades in symbol_trades_dict.items():
-    #     candle_sticks = ConvertTradeToCandleStick(trades, candle_sticks).by_minutes(3)
-    #     pass
-
-
 def simulator() -> None:
+    from bot.simulator import Simulator
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    Simulator(e).run()
+    Simulator(e).run(last_days=10)
+    # Simulator(e).test_ml()
     
 
 if __name__ == '__main__':

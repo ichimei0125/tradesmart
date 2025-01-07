@@ -15,6 +15,7 @@ setup(
         "SQLAlchemy~=2.0",
         "mariadb~=1.1",
         "TA-Lib~=0.6",
+        "gymnasium~=1.0",
     ],
     # entry_points={
     #     "console_scripts": [

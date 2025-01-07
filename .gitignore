@@ -3,6 +3,7 @@
 .DS_Store
 config.yaml
 log/
+ml_models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
