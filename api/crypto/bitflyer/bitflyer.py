@@ -5,7 +5,7 @@ import ccxt
 import asyncio
 
 from api.crypto.exchange import Exchange
-from api.db.trade import bulk_insert_trade, get_trades, get_lastest_trade_time
+from api.db.trade import bulk_insert_trade, get_trades, get_lastest_trade_time, get_oldest_trade_time
 from tradeengine.models.trade import CandleStick, Trade, Side, ConvertTradeToCandleStick
 from tools.common import get_now, local_2_utc
 from tools.constants import MarketInfo
@@ -26,6 +26,8 @@ class Bitflyer(Exchange):
         # trading frequency 
         self.is_realtime:bool = False
         self.fetch_data_interval_minute:int = 1
+        # tech analysis
+        self.candlestick_interval:int = 5
 
         # cache
         self.cache_trades:List[Trade]
@@ -61,58 +63,89 @@ class Bitflyer(Exchange):
         if not since:
             since = now - timedelta(days=30) # max histroy of bitflyer is past 31 days
         since = local_2_utc(since)
-        last_days = (local_2_utc(now) - since).days
 
         res = {}
         # TODO: multi process?
         # histroy data are too many, no multi process is better
         for symbol in self.symbols:
-            # TODO: consider missing data in db
-            # get db lastest data ~ now
-            _lastest_time = asyncio.run(get_lastest_trade_time(self.exchange_name, symbol))
-            if _lastest_time is not None:
-                since = _lastest_time
-
-            trades:List[Trade] = []
-            before_id = None
-            while True:
-                self._public_api_limit()
-                _trades:List
-                if not before_id:
-                    _trades = self.exchange.fetch_trades(symbol, limit=500) # max limit for bitflyer is 500
-                else:
-                    _trades = self.exchange.fetch_trades(symbol, limit=500, params={'before': before_id}) # max limit for bitflyer is 500
-
-                _trades_ = [self._api_2_db_trade(_t) for _t in _trades]
-                trades.extend(_trades_)
-
-                before_id = _trades[0]['id']
-                lastest_datetime = _trades_[0].execution_time
-
-                if len(trades) >= 10000:
-                    asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
-                    trades = []
-                if lastest_datetime <= since:
-                    asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
-                    break
-            data = asyncio.run(get_trades(self.exchange_name, symbol, last_days))
-            res[symbol] = data
+            res[symbol] = self._fetch_trades(since, symbol)
         return res
 
-    def fetch_candlesticks(self, since) -> Dict[str, Dict[timedelta, List[CandleStick]]]:
+    def _fetch_trades(self, since:datetime, symbol:str) -> List[Trade]:
+        # TODO: consider missing data in db
+        # get db lastest data ~ now
+        now = get_now()
+        _lastest_time = asyncio.run(get_lastest_trade_time(self.exchange_name, symbol))
+        if _lastest_time is not None:
+            since = _lastest_time
+        last_days = (local_2_utc(now) - since).days
+
+        trades:List[Trade] = []
+        before_id = None
+        while True:
+            self._public_api_limit()
+            _trades:List
+            if not before_id:
+                _trades = self.exchange.fetch_trades(symbol, limit=500) # max limit for bitflyer is 500
+            else:
+                _trades = self.exchange.fetch_trades(symbol, limit=500, params={'before': before_id}) # max limit for bitflyer is 500
+
+            _trades_ = [self._api_2_db_trade(_t) for _t in _trades]
+            trades.extend(_trades_)
+
+            before_id = _trades[0]['id']
+            lastest_datetime = _trades_[0].execution_time
+
+            if len(trades) >= 10000:
+                asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
+                trades = []
+            if lastest_datetime <= since:
+                asyncio.run(bulk_insert_trade(self.exchange_name, symbol, trades))
+                break
+        data = asyncio.run(get_trades(self.exchange_name, symbol, last_days))
+        return data
+
+    def fetch_candlesticks(self, since, use_yahoo_finance:bool=True) -> Dict[str, Dict[str, List[CandleStick]]]:
         if since is None:
             last_minutes = (MarketInfo.CANDLESTICK_NUMS + 2) * self.fetch_data_interval_minute
             since = get_now() - timedelta(minutes=last_minutes)
         since = local_2_utc(since)
-        trades_dict = self.fetch_trades(since=since)
 
         # TODO: multi candlestick
         res = {}
-        for symbol, trades in trades_dict.items():
-            candlesticks, interval = ConvertTradeToCandleStick(trades).by_minutes(3)
+        is_data_enough:bool = False
+        for symbol in self.symbols:
+            _oldest_time = asyncio.run(get_oldest_trade_time(self.exchange_name, symbol))
+            is_data_enough = _oldest_time is None or _oldest_time < since
+
+            interval = f'{self.candlestick_interval}m'
+            candlesticks:List[CandleStick]
+            if not is_data_enough and use_yahoo_finance:
+                candlesticks = super()._fetch_candlesticks_by_yfinance(self._to_yahoofince_symbol(symbol), since, interval)
+            else:
+                trades = self._fetch_trades
+                _, candlesticks = ConvertTradeToCandleStick(trades).by_minutes(3)
+
             res[symbol] = {interval:candlesticks}
 
         return res
+
+    def _to_yahoofince_symbol(self, symbol: str) -> str:
+        mapper = {
+            "BTC_JPY": "BTC-JPY",
+            "XRP_JPY": "XRP-JPY",
+            "ETH_JPY": "ETH-JPY",
+            "XLM_JPY": "XLM-JPY",
+            "MONA_JPY": "MONA-JPY",
+            # "ELF_JPY": "",
+            "ETH_BTC": "ETH-BTC",
+            "BCH_BTC ": "BCH-BTC",
+            "FX_BTC_JPY": "BTC-JPY",
+
+        }
+        if symbol not in mapper:
+            raise ValueError(f'{self.exchange_name}: {symbol}, cannot convert to yfinance symbol')
+        return mapper[symbol]
 
     def _api_2_db_trade(self, data) -> Trade:
         _side:Side

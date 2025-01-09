@@ -16,6 +16,8 @@ setup(
         "mariadb~=1.1",
         "TA-Lib~=0.6",
         "gymnasium~=1.0",
+        "stable_baselines3~=2.4",
+        "yfinance~=0.2",
     ],
     # entry_points={
     #     "console_scripts": [

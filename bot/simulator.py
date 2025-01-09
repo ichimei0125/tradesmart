@@ -45,26 +45,27 @@ class Simulator:
 
         engine_simulator.run(MarketInfo.CANDLESTICK_NUMS, 3, self.exchange.fetch_data_interval_minute, self.exchange.exchange_name, symbol)
 
-    def test_ml(self,  last_days:int=90, training_test_ratio:float=0.5) -> None:
+    def test_ml(self,  last_days:int=59, training_test_ratio:float=0.5) -> None:
         since = get_now() - timedelta(days=last_days)
         since = local_2_utc(since)
-        data = self.exchange.fetch_trades(since)
+        data = self.exchange.fetch_candlesticks(since)
 
-        for symbol, trades in data.items():
+        for symbol, candlesticks_info in data.items():
             print(symbol)
             name = get_unique_name(self.exchange.exchange_name, symbol)
 
-            candlesticks, _ = ConvertTradeToCandleStick(trades).by_minutes(3)
-            indicators = get_indicator(candlesticks)
+            # TODO: multi candlesticks
+            for _, candlesticks in candlesticks_info.items():
+                indicators = get_indicator(candlesticks)
 
-            index = int(len(candlesticks) * training_test_ratio)
+                index = int(len(candlesticks) * training_test_ratio)
 
-            training_candlesticks = candlesticks[:index]
-            training_indicators = indicators[:index]
-            test_candlesticks = candlesticks[index:]
-            test_indicators = indicators[index:]
+                training_candlesticks = candlesticks[:index]
+                training_indicators = indicators[:index]
+                test_candlesticks = candlesticks[index:]
+                test_indicators = indicators[index:]
 
-            rl_training(name, training_candlesticks, training_indicators)
-            rl_run(name, test_candlesticks, test_indicators)
+                rl_training(name, training_candlesticks, training_indicators)
+                rl_run(name, test_candlesticks, test_indicators)
 
 

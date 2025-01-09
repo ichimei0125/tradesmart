@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 from api.crypto.exchange import Exchange
 from api.crypto.bitflyer.bitflyer import Bitflyer
 from config.config import Config
@@ -16,7 +15,7 @@ def simulator() -> None:
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
     Simulator(e).run(last_days=10)
 
-async def update_model() -> None:
+def update_model() -> None:
     # TODO: sepreate
     from bot.simulator import Simulator
     c = Config()
@@ -43,4 +42,4 @@ if __name__ == '__main__':
     elif args.mode == "simulate":
         simulator(args.last_days)
     elif args.mode == "update_model":
-        asyncio.run(update_model())
+        update_model()

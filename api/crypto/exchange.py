@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
+import yfinance as yf
 
-from tradeengine.models.trade import Trade, CandleStick
+from tradeengine.models.trade import Trade, CandleStick, sort_trades_desc
 
 class Exchange(ABC):
     def __init__(self, exchange_name:str, symbols:List[str], dry_run:List[str]):
@@ -27,8 +28,31 @@ class Exchange(ABC):
         pass
 
     @abstractmethod
-    def fetch_candlesticks(self, since:Optional[datetime]) -> Dict[str, Dict[timedelta, List[CandleStick]]]:
+    def fetch_candlesticks(self, since:Optional[datetime], use_yahoo_finance:bool=True) -> Dict[str, Dict[str, List[CandleStick]]]:
         """
         since: if none, CANDLESTICK_NUMS(defined at tools/constants.py) * self.fetch_data_interval_minute
-        """
+        use_yahoo_finance: fetch data from yahoo_finance if cannot get enough data from exchange
+        """ 
         pass
+
+    def _fetch_candlesticks_by_yfinance(self, symbol:str, since:datetime, interval:str) -> List[CandleStick]:
+        y = yf.Ticker(symbol)
+        data = y.history(start=since, interval=interval)
+
+        if data is None or data.shape[0] <= 0:
+            raise Exception('Cannot get data from yfinance')
+
+        res:List[CandleStick] = []
+        for date, candlestick in data.iterrows():
+            res.append(
+                CandleStick(
+                    open=candlestick['Open'],
+                    close=candlestick['Close'],
+                    high=candlestick['High'],
+                    low=candlestick['Low'],
+                    volume=candlestick['Volume'], # TODO: not same with exchange volume
+                    opentime=date.to_pydatetime(),
+                )
+            )
+        res.reverse()
+        return res

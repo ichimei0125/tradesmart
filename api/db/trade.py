@@ -4,6 +4,7 @@ import sqlalchemy
 from sqlalchemy import Tuple, select
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import func
 
 from api.db.common import _get_engine, _create_sessison, Base
 from tools.common import get_now, get_unique_name
@@ -22,7 +23,7 @@ def _init_dbtrade_schema(exchange_name:str,symbol:str) -> None:
             sqlalchemy.Column('price', sqlalchemy.Float),
             sqlalchemy.Column('size', sqlalchemy.Float),
             sqlalchemy.Column('side', sqlalchemy.String(length=4)),
-            sqlalchemy.Column('execution_time', sqlalchemy.dialects.mysql.DATETIME(fsp=6)),
+            sqlalchemy.Column('execution_time', sqlalchemy.dialects.mysql.DATETIME(fsp=6), index=True),
             extend_existing=False,
         )
 
@@ -80,13 +81,23 @@ async def get_lastest_trade_time(exchange_name:str, symbol:str) -> Optional[date
     _session = _init_trade_session(exchange_name, symbol)
     table_name = _get_dbtrade_table_name(exchange_name, symbol)
 
-    result = _session.execute(
-        select(Base.metadata.tables[table_name])
-        .order_by(Base.metadata.tables[table_name].c.execution_time.desc())
-    ).first()
+    result = _session.query(
+        func.max(Base.metadata.tables[table_name].c.execution_time)
+    ).one_or_none()
 
-    if result is None:
-        return result
+    if result is not None:
+        result = result[0].replace(tzinfo=timezone.utc)
+    return result
 
-    trade = Trade(**result._mapping)
-    return trade.execution_time.replace(tzinfo=timezone.utc)
+
+async def get_oldest_trade_time(exchange_name:str, symbol:str) -> Optional[datetime]:
+    _session = _init_trade_session(exchange_name, symbol)
+    table_name = _get_dbtrade_table_name(exchange_name, symbol)
+
+    result = _session.query(
+        func.min(Base.metadata.tables[table_name].c.execution_time)
+    ).one_or_none()
+
+    if result is not None:
+        result = result[0].replace(tzinfo=timezone.utc)
+    return result

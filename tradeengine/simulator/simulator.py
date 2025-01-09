@@ -40,7 +40,7 @@ class Simulator:
         for trade in reversed(trades):
             tmp_trades.insert(0, trade) # O(n), remove unused trades
             if trade.execution_time > end_time:
-                cached_candlesticks, _ = ConvertTradeToCandleStick(tmp_trades, cached_candlesticks, check_trades_order=False).by_minutes(candlestick_interval)
+                _, cached_candlesticks = ConvertTradeToCandleStick(tmp_trades, cached_candlesticks, check_trades_order=False).by_minutes(candlestick_interval)
                 indicators = get_indicator(cached_candlesticks)
                 # trade_status = simple_strategy(cached_candlesticks)
                 trade_status = rl_run(self.name, cached_candlesticks, indicators)
