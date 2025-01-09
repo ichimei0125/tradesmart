@@ -15,6 +15,8 @@ class Exchange(ABC):
         # trading frequency 
         self.is_realtime:bool = False
         self.fetch_data_interval_minute:int = 1
+        # tech analysis
+        self.candlestick_interval:int = 5
 
     def is_dry_run(self, symbol:str) -> bool:
         return symbol in self.dry_run

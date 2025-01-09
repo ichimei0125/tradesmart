@@ -40,6 +40,6 @@ if __name__ == '__main__':
     if args.mode == "trade":
         main()
     elif args.mode == "simulate":
-        simulator(args.last_days)
+        simulator()
     elif args.mode == "update_model":
         update_model()

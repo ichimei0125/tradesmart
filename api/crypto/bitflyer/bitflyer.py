@@ -75,10 +75,11 @@ class Bitflyer(Exchange):
         # TODO: consider missing data in db
         # get db lastest data ~ now
         now = get_now()
+        last_days = (local_2_utc(now) - since).days
+
         _lastest_time = asyncio.run(get_lastest_trade_time(self.exchange_name, symbol))
         if _lastest_time is not None:
             since = _lastest_time
-        last_days = (local_2_utc(now) - since).days
 
         trades:List[Trade] = []
         before_id = None
