@@ -20,7 +20,7 @@ def update_model() -> None:
     from bot.simulator import Simulator
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    Simulator(e).test_ml()
+    Simulator(e).test_ml(training_test_ratio=0.8)
     
 
 if __name__ == '__main__':

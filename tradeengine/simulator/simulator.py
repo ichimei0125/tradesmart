@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import os
 from typing import List, Optional
-from tradeengine.core.ml.reinforcement_learning_traning import rl_run
+from tradeengine.core.ml.reinforcement_learning import rl_run
 from tradeengine.core.strategies import TradeStatus, simple_strategy
 from tradeengine.models.trade import ConvertTradeToCandleStick, Trade, get_indicator, sort_trades_desc
 from tradeengine.models.invest import *
@@ -52,11 +52,10 @@ class Simulator:
                 end_time += timedelta(minutes=fetch_interval)
                 # update tmp_trades
                 start_time = end_time - timedelta(minutes=period)
-                for i in range(len(tmp_trades.copy())-1, -1, -1):
-                    if tmp_trades[i].execution_time < start_time:
-                        tmp_trades.pop()
-                    else:
-                        break
+                index = len(tmp_trades) - 1
+                while index >= 0 and tmp_trades[index].execution_time < start_time:
+                    tmp_trades.pop()
+                    index -= 1
 
     def _get_buy_money(self) -> float:
         _type = type(self.invest_strategy)

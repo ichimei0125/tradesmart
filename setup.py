@@ -18,6 +18,7 @@ setup(
         "gymnasium~=1.0",
         "stable_baselines3~=2.4",
         "yfinance~=0.2",
+        "matplotlib~=3.10",
     ],
     # entry_points={
     #     "console_scripts": [

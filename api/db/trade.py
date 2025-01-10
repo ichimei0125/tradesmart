@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 import sqlalchemy
-from sqlalchemy import Tuple, select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import func
 
-from api.db.common import _get_engine, _create_sessison, Base
+from api.db.common import get_engine, create_sessison, Base
 from tools.common import get_now, get_unique_name
 from tradeengine.models.trade import Trade
 
@@ -28,8 +26,8 @@ def _init_dbtrade_schema(exchange_name:str,symbol:str) -> None:
         )
 
 def _init_trade_session(exchange_name:str, symbol:str) -> Session:
-    _engine = _get_engine()
-    _session = _create_sessison(_engine)
+    _engine = get_engine()
+    _session = create_sessison(_engine)
 
     _init_dbtrade_schema(exchange_name, symbol)
     Base.metadata.create_all(_engine)

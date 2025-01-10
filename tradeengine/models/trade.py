@@ -28,6 +28,12 @@ class Indicator:
     BBBands_Minus_3: float
     Stoch_K: float
     Stoch_D: float
+    SMA_20: float
+    SMA_200: float
+    RSI: float
+    MACD: float
+    MACD_SIGNAL: float
+    MACD_HIST: float
     opentime: datetime # 最初取引の時刻。
 
 @dataclass
@@ -163,6 +169,16 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
     bband_plus_2, _, bband_minus_2 =talib.BBANDS(real=closes, timeperiod=20, nbdevup=2, nbdevdn=2, matype=MA_Type.SMA)
     bband_plus_3, _, bband_minus_3 =talib.BBANDS(real=closes, timeperiod=20, nbdevup=3, nbdevdn=3, matype=MA_Type.SMA)
 
+    # SMA
+    sma_20 = talib.SMA(real=closes, timeperiod=20)
+    sma_200 = talib.SMA(real=closes, timeperiod=200)
+
+    # RSI
+    rsi = talib.RSI(real=closes, timeperiod=14)
+
+    # MACD
+    macd, macdsignal, macdhist = talib.MACD(real=closes, fastperiod=12, slowperiod=26, signalperiod=9)
+
     # result
     res = []
     for i in range(len(candlesticks)-1, -1, -1):
@@ -173,6 +189,12 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
             BBBands_Minus_3 = bband_minus_3[i],
             Stoch_K = stoch_k[i],
             Stoch_D = stoch_d[i],
+            SMA_20=sma_20[i],
+            SMA_200=sma_200[i],
+            RSI=rsi[i],
+            MACD=macd[i],
+            MACD_SIGNAL=macdsignal[i],
+            MACD_HIST=macdhist[i],
             opentime = opentimes[i],
         ))
 

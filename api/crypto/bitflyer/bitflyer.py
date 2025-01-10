@@ -124,7 +124,7 @@ class Bitflyer(Exchange):
             if not is_data_enough and use_yahoo_finance:
                 candlesticks = super()._fetch_candlesticks_by_yfinance(self._to_yahoofince_symbol(symbol), since, interval)
             else:
-                trades = self._fetch_trades
+                trades = self._fetch_trades(since, symbol)
                 _, candlesticks = ConvertTradeToCandleStick(trades).by_minutes(3)
 
             res[symbol] = {interval:candlesticks}

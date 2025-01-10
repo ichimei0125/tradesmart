@@ -9,7 +9,7 @@ from tools.constants import MarketInfo
 from tradeengine.models.trade import Trade, ConvertTradeToCandleStick, get_indicator
 from tradeengine.models.invest import FixedInvest, Invest
 from tradeengine.simulator.simulator import Simulator as EngineSimulator
-from tradeengine.core.ml.reinforcement_learning_traning import rl_training, rl_run
+from tradeengine.core.ml.reinforcement_learning import rl_training, rl_run
 
 import concurrent.futures
 from multiprocessing import cpu_count
@@ -51,7 +51,7 @@ class Simulator:
     def test_ml(self,  last_days:int=59, training_test_ratio:float=0.5) -> None:
         since = get_now() - timedelta(days=last_days)
         since = local_2_utc(since)
-        data = self.exchange.fetch_candlesticks(since)
+        data = self.exchange.fetch_candlesticks(since, use_yahoo_finance=False)
 
         for symbol, candlesticks_info in data.items():
             print(symbol)
@@ -61,14 +61,14 @@ class Simulator:
             for _, candlesticks in candlesticks_info.items():
                 indicators = get_indicator(candlesticks)
 
-                index = int(len(candlesticks) * training_test_ratio)
+                index = int(len(candlesticks) * (1- training_test_ratio))
 
-                training_candlesticks = candlesticks[:index]
-                training_indicators = indicators[:index]
-                test_candlesticks = candlesticks[index:]
-                test_indicators = indicators[index:]
+                training_candlesticks = candlesticks[index:]
+                training_indicators = indicators[index:]
+                test_candlesticks = candlesticks[:index]
+                test_indicators = indicators[:index]
 
                 rl_training(name, training_candlesticks, training_indicators)
-                rl_run(name, test_candlesticks, test_indicators)
+                rl_run(name, test_candlesticks, test_indicators, show_pic=True)
 
 
