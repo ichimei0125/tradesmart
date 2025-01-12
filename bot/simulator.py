@@ -38,7 +38,7 @@ class Simulator:
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count()) as executor:
             futures = [executor.submit(self._engin_simulator_run, trades, symbol, invest_stragety) for symbol, trades in data.items()]
-            done, not_done =concurrent.futures.wait(futures)
+            done, not_done = concurrent.futures.wait(futures)
             
             for future in done:
                 if future.exception():
@@ -74,7 +74,8 @@ class Simulator:
                 test_candlesticks = candlesticks[:index]
                 test_indicators = indicators[:index]
 
-                rl_training(name, training_candlesticks, training_indicators)
+                best_buy_times, best_sell_times = _find_best_trade(candlesticks)
+                rl_training(name, training_candlesticks, training_indicators, best_buy_times, best_sell_times)
                 rl_run(name, test_candlesticks, test_indicators, show_pic=True)
 
     def find_best_trade(self, since:datetime) -> None:

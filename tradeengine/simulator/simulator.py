@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 import os
 from typing import List, Optional
+from collections import deque
+
 from tradeengine.core.ml.reinforcement_learning import rl_run
 from tradeengine.core.strategies import TradeStatus, simple_strategy
 from tradeengine.models.trade import Trade, sort_trades_desc
@@ -37,9 +39,9 @@ class Simulator:
         period = (candlesticks_num + 2) * candlestick_interval
         end_time = trades[-1].execution_time + timedelta(minutes=period)
         cached_candlesticks = None
-        tmp_trades = []
+        tmp_trades = deque([])
         for trade in reversed(trades):
-            tmp_trades.insert(0, trade) # O(n), remove unused trades
+            tmp_trades.appendleft(trade)
             if trade.execution_time > end_time:
                 _, cached_candlesticks = ConvertTradeToCandleStick(tmp_trades, cached_candlesticks, check_trades_order=False).by_minutes(candlestick_interval)
                 indicators = get_indicator(cached_candlesticks)
@@ -47,9 +49,9 @@ class Simulator:
                 trade_status = rl_run(self.name, cached_candlesticks, indicators)
 
                 if trade_status == TradeStatus.BUY:
-                    self.sim_buy(trade.execution_time, cached_candlesticks[0].close, self._get_buy_money(), _log)
+                    self.sim_buy(trade.execution_time, cached_candlesticks[0].Close, self._get_buy_money(), _log)
                 elif trade_status == TradeStatus.SELL:
-                    self.sim_sell(trade.execution_time, cached_candlesticks[0].close, self._get_sell_size(), _log)
+                    self.sim_sell(trade.execution_time, cached_candlesticks[0].Close, self._get_sell_size(), _log)
                 end_time += timedelta(minutes=fetch_interval)
                 # update tmp_trades
                 start_time = end_time - timedelta(minutes=period)

@@ -1,3 +1,5 @@
+from datetime import datetime
+import math
 from pathlib import Path
 from gymnasium import spaces
 import gymnasium as gym
@@ -14,23 +16,28 @@ from tradeengine.tools.common import create_folder_if_not_exists
 
 
 class MarketEnv(gym.Env):
-    def __init__(self, indicators: List[Indicator], candlesticks: List[CandleStick]):
+    def __init__(self, 
+                 indicators: List[Indicator], 
+                 candlesticks: List[CandleStick], 
+                 best_buy_times: List[datetime] = [],
+                 best_sell_times: List[datetime] = []):
         super(MarketEnv, self).__init__()
         
         self.indicators = indicators
         self.candlesticks = candlesticks
         
         self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf, shape=(17,), dtype=np.float64
+            low=-np.inf, high=np.inf, shape=(16,), dtype=np.float64
         )
         self.action_space = spaces.Discrete(3)
 
         self.buy_prices:List[float] = []
-        self.position = 0
         
         self.current_step = 0
         self.done = False
 
+        self.best_buy_times = set(best_buy_times)
+        self.best_sell_time = set(best_sell_times)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -48,24 +55,29 @@ class MarketEnv(gym.Env):
         future_prices = []
         for index in range(self.current_step, min(self.current_step + 4, len(self.candlesticks))):
             future_prices.append(self.candlesticks[index].Close)
+
+        # TODO: only consider minute now
+        interval = int((self.candlesticks[0].Opentime - self.candlesticks[1].Opentime).seconds / 60)
+        open_minute = (self.candlesticks[self.current_step].Opentime.minute // interval) * interval
+        open_time = self.candlesticks[self.current_step].Opentime.replace(minute=open_minute, second=0, microsecond=0)
+        is_best_buy_time = open_time in self.best_buy_times
+        is_best_sell_time = open_time in self.best_sell_time
     
         if action == TradeStatus.BUY.value: # buy
-            if self.position == 0:
-                self.position = 1
-                self.buy_prices.append(current_price)
-                reward = max(future_prices) - current_price
-            else:
-                reward = -0.5
+            self.buy_prices.append(current_price)
+            reward = self._get_ratio(current_price, max(future_prices))
+            if len(self.best_buy_times) > 0:
+                reward += 0.1 if is_best_buy_time else -0.1
         elif action == TradeStatus.SELL.value:  # sell
-            if self.position == 1:
-                self.position = 0
+            reward = 0.0
+            if len(self.buy_prices) > 0:
                 buy_price = self.buy_prices.pop(0)
                 # trade reward
-                reward = current_price - buy_price
-                # future prices reward
-                reward += 0.5 * (current_price - max(future_prices))
-            else:
-                reward = -1
+                reward += self._get_ratio(buy_price, current_price)
+            # future prices reward
+            reward += 0.5 * -1 * (self._get_ratio(current_price, max(future_prices)))
+            if len(self.best_sell_time) > 0:
+                reward += 0.1 if is_best_sell_time else -0.1
         elif action == TradeStatus.HOLD.value:  # hold
             reward = -0.1 # trade quickly
     
@@ -98,8 +110,10 @@ class MarketEnv(gym.Env):
             candlestick.Close,
             candlestick.High,
             candlestick.Low,
-            self.position,
         ], dtype=np.float64)
+
+    def _get_ratio(self, old_num:float, new_num:float) -> float:
+        return round((old_num - new_num) / old_num, 3)
 
 def _get_model_path(name:str) -> Path:
     folder = 'ml_models'
@@ -108,8 +122,8 @@ def _get_model_path(name:str) -> Path:
     file_name = f'{name}_dqn_model.zip'
     return Path(folder, file_name)
 
-def rl_training(name:str, candlesticks:List[CandleStick], indicators:List[Indicator], save_model=True) -> DQN:
-    env = DummyVecEnv([lambda: MarketEnv(indicators, candlesticks)])
+def rl_training(name:str, candlesticks:List[CandleStick], indicators:List[Indicator], best_buy_times:List[datetime]=[], best_sell_times:List[datetime]=[], save_model=True) -> DQN:
+    env = DummyVecEnv([lambda: MarketEnv(indicators, candlesticks, best_buy_times, best_sell_times)])
     check_env(env.envs[0], warn=True)
 
     model = DQN("MlpPolicy", env, verbose=1)
