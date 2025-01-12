@@ -2,15 +2,13 @@ from pathlib import Path
 from gymnasium import spaces
 import gymnasium as gym
 import numpy as np
-from dataclasses import dataclass
-from datetime import datetime
 from typing import List
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.vec_env import DummyVecEnv
 import matplotlib.pyplot as plt
 
-from tradeengine.models.trade import CandleStick, Indicator
+from tradeengine.models.candlestick import CandleStick, Indicator
 from tradeengine.core.strategies import TradeStatus
 from tradeengine.tools.common import create_folder_if_not_exists
 

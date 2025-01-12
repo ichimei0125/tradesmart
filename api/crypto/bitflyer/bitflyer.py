@@ -6,7 +6,9 @@ import asyncio
 
 from api.crypto.exchange import Exchange
 from api.db.trade import bulk_insert_trade, get_trades, get_lastest_trade_time, get_oldest_trade_time
-from tradeengine.models.trade import CandleStick, Trade, Side, ConvertTradeToCandleStick
+from tradeengine.models.trade import Trade, Side
+from tradeengine.models.candlestick import CandleStick
+from tradeengine.tools.convertor import ConvertTradeToCandleStick
 from tools.common import get_now, local_2_utc
 from tools.constants import MarketInfo
 

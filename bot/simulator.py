@@ -6,7 +6,9 @@ from config.config import Config
 from api.crypto.exchange import Exchange
 from tools.common import get_now, local_2_utc, get_unique_name
 from tools.constants import MarketInfo
-from tradeengine.models.trade import Trade, ConvertTradeToCandleStick, get_indicator
+from tradeengine.models.trade import Trade
+from tradeengine.models.candlestick import get_indicator
+from tradeengine.tools.convertor import ConvertTradeToCandleStick
 from tradeengine.models.invest import FixedInvest, Invest
 from tradeengine.simulator.simulator import Simulator as EngineSimulator
 from tradeengine.core.ml.reinforcement_learning import rl_training, rl_run

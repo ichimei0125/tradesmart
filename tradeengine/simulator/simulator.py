@@ -4,9 +4,10 @@ import os
 from typing import List, Optional
 from tradeengine.core.ml.reinforcement_learning import rl_run
 from tradeengine.core.strategies import TradeStatus, simple_strategy
-from tradeengine.models.trade import ConvertTradeToCandleStick, Trade, get_indicator, sort_trades_desc
+from tradeengine.models.trade import Trade, sort_trades_desc
+from tradeengine.models.candlestick import get_indicator
 from tradeengine.models.invest import *
-from tradeengine.tools.convertor import datetime_to_str
+from tradeengine.tools.convertor import datetime_to_str, ConvertTradeToCandleStick
 from tradeengine.tools.common import get_unique_name
 from tradeengine.tools.log import log
 

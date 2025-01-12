@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 import yfinance as yf
 
-from tradeengine.models.trade import Trade, CandleStick, sort_trades_desc
+from tradeengine.models.trade import Trade
+from tradeengine.models.candlestick import CandleStick
 
 class Exchange(ABC):
     def __init__(self, exchange_name:str, symbols:List[str], dry_run:List[str]):

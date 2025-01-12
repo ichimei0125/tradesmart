@@ -1,7 +1,7 @@
 from copy import copy
 from typing import List
 from enum import Enum
-from tradeengine.models.trade import CandleStick, get_indicator
+from tradeengine.models.candlestick import CandleStick, get_indicator
 import numpy as np
 
 class TradeStatus(Enum):
