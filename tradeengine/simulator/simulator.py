@@ -39,9 +39,13 @@ class Simulator:
         period = (candlesticks_num + 2) * candlestick_interval
         end_time = trades[-1].execution_time + timedelta(minutes=period)
         cached_candlesticks = None
-        tmp_trades = deque([])
+        # TODO: data too small, not difference between O(1), O(n). Consider deque use more resource than list, list is faster
+        #       try use deque when big data
+        # tmp_trades = deque([])
+        tmp_trades = []
         for trade in reversed(trades):
-            tmp_trades.appendleft(trade)
+            # tmp_trades.appendleft(trade)
+            tmp_trades.insert(0, trade)
             if trade.execution_time > end_time:
                 _, cached_candlesticks = ConvertTradeToCandleStick(tmp_trades, cached_candlesticks, check_trades_order=False).by_minutes(candlestick_interval)
                 indicators = get_indicator(cached_candlesticks)
