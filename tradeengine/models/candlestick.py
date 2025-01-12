@@ -8,15 +8,15 @@ from talib import MA_Type
 
 @dataclass
 class CandleStick:
-    open: float
-    close: float
-    high: float
-    low: float
-    volume: float
-    opentime: datetime # 最初取引の時刻。
+    Open: float
+    Close: float
+    High: float
+    Low: float
+    Volume: float
+    Opentime: datetime # 最初取引の時刻。
 
     def __post_init__(self):
-        self.volume = round(self.volume, 3)
+        self.Volume = round(self.Volume, 3)
 
 @dataclass
 class Indicator:
@@ -32,7 +32,7 @@ class Indicator:
     MACD: float
     MACD_SIGNAL: float
     MACD_HIST: float
-    opentime: datetime # 最初取引の時刻。
+    Opentime: datetime # 最初取引の時刻。
 
 def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
     opens = []
@@ -41,11 +41,11 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
     lows = []
     opentimes = []
     for i in range(len(candlesticks)-1, -1, -1):
-        opens = np.append(opens, candlesticks[i].open)
-        closes = np.append(closes, candlesticks[i].close)
-        highs = np.append(highs, candlesticks[i].high)
-        lows = np.append(lows, candlesticks[i].low)
-        opentimes = np.append(opentimes, candlesticks[i].opentime)
+        opens = np.append(opens, candlesticks[i].Open)
+        closes = np.append(closes, candlesticks[i].Close)
+        highs = np.append(highs, candlesticks[i].High)
+        lows = np.append(lows, candlesticks[i].Low)
+        opentimes = np.append(opentimes, candlesticks[i].Opentime)
 
     # Stoch
     stoch_k, stoch_d = talib.STOCH(
@@ -83,7 +83,23 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
             MACD=macd[i],
             MACD_SIGNAL=macdsignal[i],
             MACD_HIST=macdhist[i],
-            opentime = opentimes[i],
+            Opentime = opentimes[i],
         ))
 
     return res
+
+def get_candlestick_prices(candlesticks:List[CandleStick], mode:str='close') -> List[float]:
+    """mode must be \"open\", \"close\", \"high\", \"low\", \"opentime\""""
+    match mode:
+        case 'close':
+            return [ candlestick.Close for candlestick in candlesticks]
+        case 'open':
+            return [ candlestick.Open for candlestick in candlesticks]
+        case 'high':
+            return [ candlestick.High for candlestick in candlesticks]
+        case 'low':
+            return [ candlestick.Low for candlestick in candlesticks]
+        case 'opentime':
+            return [ candlestick.Opentime for candlestick in candlesticks]
+        case _:
+            raise ValueError(f'invaid mode: {mode}, mode must be \"open\", \"close\", \"high\", \"low\", \"opentime\"')

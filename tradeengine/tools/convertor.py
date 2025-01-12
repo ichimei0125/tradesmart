@@ -1,7 +1,9 @@
+from dataclasses import fields
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
 import numpy as np
+import pandas as pd
 
 from tradeengine.models.candlestick import CandleStick
 from tradeengine.models.trade import Trade, sort_trades_desc
@@ -55,12 +57,12 @@ class ConvertTradeToCandleStick:
         for i in range(len(self.trades)):
             if self.trades[i].execution_time < open_time:
                 new_candlestick = CandleStick(
-                    open=tmp_trades_price[-1],
-                    close=tmp_trades_price[0],
-                    high=np.max(tmp_trades_price),
-                    low=np.min(tmp_trades_price),
-                    volume=tmp_volume,
-                    opentime=open_time,
+                    Open=tmp_trades_price[-1],
+                    Close=tmp_trades_price[0],
+                    High=np.max(tmp_trades_price),
+                    Low=np.min(tmp_trades_price),
+                    Volume=tmp_volume,
+                    Opentime=open_time,
                 )
                 candlesticks.append(new_candlestick)
                 # init first element
@@ -68,10 +70,25 @@ class ConvertTradeToCandleStick:
                 tmp_trades_price = [self.trades[i].price]
                 tmp_volume = self.trades[i].size
 
-            if self.cached and open_time == self.cached[0].opentime: # if open_time != cached[0].opentime means different time scale, won't use cached data
+            if self.cached and open_time == self.cached[0].Opentime: # if open_time != cached[0].opentime means different time scale, won't use cached data
                 candlesticks += self.cached[1:]
                 break
 
             tmp_trades_price = np.append(tmp_trades_price, self.trades[i].price)
             tmp_volume += self.trades[i].size
         return candlesticks
+
+def convert_dataclass_to_dataframe(data: List, index_field:Optional[str]=None) -> pd.DataFrame:
+    if not data:
+        raise ValueError("empty data")
+    
+    field_names = [f.name for f in fields(data[0])]
+    data_dicts = [{field: getattr(instance, field) for field in field_names} for instance in data]
+    
+    df = pd.DataFrame(data_dicts)
+    
+    if index_field and index_field in df.columns:
+        df.set_index(index_field, inplace=True)
+        df.sort_index(inplace=True)
+    
+    return df

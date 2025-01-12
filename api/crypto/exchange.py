@@ -49,12 +49,12 @@ class Exchange(ABC):
         for date, candlestick in data.iterrows():
             res.append(
                 CandleStick(
-                    open=candlestick['Open'],
-                    close=candlestick['Close'],
-                    high=candlestick['High'],
-                    low=candlestick['Low'],
-                    volume=candlestick['Volume'], # TODO: not same with exchange volume
-                    opentime=date.to_pydatetime(),
+                    Open=candlestick['Open'],
+                    Close=candlestick['Close'],
+                    High=candlestick['High'],
+                    Low=candlestick['Low'],
+                    Volume=candlestick['Volume'], # TODO: not same with exchange volume
+                    Opentime=date.to_pydatetime(),
                 )
             )
         res.reverse()

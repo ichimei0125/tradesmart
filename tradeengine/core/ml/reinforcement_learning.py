@@ -43,11 +43,11 @@ class MarketEnv(gym.Env):
     def step(self, action):
         reward = 0
     
-        current_price = self.candlesticks[self.current_step].close
+        current_price = self.candlesticks[self.current_step].Close
         # future 3 candlesticks
         future_prices = []
         for index in range(self.current_step, min(self.current_step + 4, len(self.candlesticks))):
-            future_prices.append(self.candlesticks[index].close)
+            future_prices.append(self.candlesticks[index].Close)
     
         if action == TradeStatus.BUY.value: # buy
             if self.position == 0:
@@ -94,10 +94,10 @@ class MarketEnv(gym.Env):
             indicator.MACD,
             indicator.MACD_SIGNAL,
             indicator.MACD_HIST,
-            candlestick.open,
-            candlestick.close,
-            candlestick.high,
-            candlestick.low,
+            candlestick.Open,
+            candlestick.Close,
+            candlestick.High,
+            candlestick.Low,
             self.position,
         ], dtype=np.float64)
 
@@ -140,8 +140,8 @@ def rl_run(name:str, candlesticks:List[CandleStick], indicators:List[Indicator],
             break
 
     if show_pic:
-        prices = [c.close for c in candlesticks]
-        times = [c.opentime for c in candlesticks]  # 提取 opentime
+        prices = [c.Close for c in candlesticks]
+        times = [c.Opentime for c in candlesticks]  # 提取 opentime
         buy_points = [i for i, a in enumerate(actions) if a == TradeStatus.BUY.value]
         sell_points = [i for i, a in enumerate(actions) if a == TradeStatus.SELL.value]
 
