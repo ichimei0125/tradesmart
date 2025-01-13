@@ -56,7 +56,6 @@ class MarketEnv(gym.Env):
         for index in range(self.current_step, min(self.current_step + 4, len(self.candlesticks))):
             future_prices.append(self.candlesticks[index].Close)
 
-        # TODO: only consider minute now
         open_time = self.candlesticks[self.current_step].Opentime
         is_best_buy_time = open_time in self.best_buy_times
         is_best_sell_time = open_time in self.best_sell_time
