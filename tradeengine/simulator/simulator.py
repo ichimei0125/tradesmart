@@ -87,8 +87,8 @@ class Simulator:
         self.account_money -= money
 
         # loss_cut, for margin
-        if self.loss_cut and self.account_coin < 0.001 and self.account_money < self.loss_cut:
-            _log.warning(f'LOSS CUT: {self.account_money}')
+        # if self.loss_cut and self.account_coin < 0.001 and self.account_money < self.loss_cut:
+        #     _log.warning(f'LOSS CUT: {self.account_money}')
         
         s_time = datetime_to_str(time)
         _log.info(f'{s_time}, BUY, {price:.2f}, {_size}, {self.account_coin}, {self.account_money:.2f}')

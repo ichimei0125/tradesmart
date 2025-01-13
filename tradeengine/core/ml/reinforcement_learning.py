@@ -27,7 +27,7 @@ class MarketEnv(gym.Env):
         self.candlesticks = candlesticks
         
         self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf, shape=(16,), dtype=np.float64
+            low=-np.inf, high=np.inf, shape=(13,), dtype=np.float64
         )
         self.action_space = spaces.Discrete(3)
 
@@ -57,17 +57,15 @@ class MarketEnv(gym.Env):
             future_prices.append(self.candlesticks[index].Close)
 
         # TODO: only consider minute now
-        interval = int((self.candlesticks[0].Opentime - self.candlesticks[1].Opentime).seconds / 60)
-        open_minute = (self.candlesticks[self.current_step].Opentime.minute // interval) * interval
-        open_time = self.candlesticks[self.current_step].Opentime.replace(minute=open_minute, second=0, microsecond=0)
+        open_time = self.candlesticks[self.current_step].Opentime
         is_best_buy_time = open_time in self.best_buy_times
         is_best_sell_time = open_time in self.best_sell_time
     
         if action == TradeStatus.BUY.value: # buy
             self.buy_prices.append(current_price)
-            reward = self._get_ratio(current_price, max(future_prices))
-            if len(self.best_buy_times) > 0:
-                reward += 0.1 if is_best_buy_time else -0.1
+            reward = 1.5 * self._get_ratio(current_price, max(future_prices)) # 1.5: payment for selling reward
+            if len(self.best_buy_times) > 0 and is_best_buy_time:
+                reward += 0.1
         elif action == TradeStatus.SELL.value:  # sell
             reward = 0.0
             if len(self.buy_prices) > 0:
@@ -76,8 +74,8 @@ class MarketEnv(gym.Env):
                 reward += self._get_ratio(buy_price, current_price)
             # future prices reward
             reward += 0.5 * -1 * (self._get_ratio(current_price, max(future_prices)))
-            if len(self.best_sell_time) > 0:
-                reward += 0.1 if is_best_sell_time else -0.1
+            if len(self.best_sell_time) > 0 and is_best_sell_time:
+                reward += 0.1
         elif action == TradeStatus.HOLD.value:  # hold
             reward = -0.1 # trade quickly
     
@@ -106,10 +104,10 @@ class MarketEnv(gym.Env):
             indicator.MACD,
             indicator.MACD_SIGNAL,
             indicator.MACD_HIST,
-            candlestick.Open,
+            # candlestick.Open,
             candlestick.Close,
-            candlestick.High,
-            candlestick.Low,
+            # candlestick.High,
+            # candlestick.Low,
         ], dtype=np.float64)
 
     def _get_ratio(self, old_num:float, new_num:float) -> float:
