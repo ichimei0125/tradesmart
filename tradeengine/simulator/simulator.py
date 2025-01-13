@@ -2,19 +2,24 @@
 from datetime import datetime, timedelta
 import os
 from typing import List, Optional
+from collections import deque
+
+from tradeengine.core.ml.reinforcement_learning import rl_run
 from tradeengine.core.strategies import TradeStatus, simple_strategy
-from tradeengine.models.trade import ConvertTradeToCandleStick, Trade, sort_trades_desc
+from tradeengine.models.trade import Trade, sort_trades_desc
+from tradeengine.models.candlestick import get_indicator
 from tradeengine.models.invest import *
-from tradeengine.tools.convertor import datetime_to_str
+from tradeengine.tools.convertor import datetime_to_str, ConvertTradeToCandleStick
 from tradeengine.tools.common import get_unique_name
 from tradeengine.tools.log import log
 
 class Simulator:
-    def __init__(self, trades: List[Trade], invest: Invest, is_margin:bool=False):
+    def __init__(self, trades: List[Trade], invest: Invest, name:str, is_margin:bool=False):
         self.trades = sort_trades_desc(trades)
         self.account_money = invest.balance
         self.account_coin:float = 0.0
         self.loss_cut = invest.loss_cut
+        self.name = name
 
         self.invest_strategy = invest
 
@@ -33,25 +38,31 @@ class Simulator:
     def push_trade(self, trades:List[Trade], candlesticks_num:int, candlestick_interval:int, fetch_interval:int, _log:log):
         period = (candlesticks_num + 2) * candlestick_interval
         end_time = trades[-1].execution_time + timedelta(minutes=period)
-        cached_candlestick = None
+        cached_candlesticks = None
+        # TODO: data too small, not difference between O(1), O(n). Consider deque use more resource than list, list is faster
+        #       try use deque when big data
+        # tmp_trades = deque([])
         tmp_trades = []
         for trade in reversed(trades):
-            tmp_trades.insert(0, trade) # O(n), remove unused trades
+            # tmp_trades.appendleft(trade)
+            tmp_trades.insert(0, trade)
             if trade.execution_time > end_time:
-                cached_candlestick, _ = ConvertTradeToCandleStick(tmp_trades, cached_candlestick, check_trades_order=False).by_minutes(candlestick_interval)
-                trade_status = simple_strategy(cached_candlestick)
+                _, cached_candlesticks = ConvertTradeToCandleStick(tmp_trades, cached_candlesticks, check_trades_order=False).by_minutes(candlestick_interval)
+                indicators = get_indicator(cached_candlesticks)
+                # trade_status = simple_strategy(cached_candlesticks)
+                trade_status = rl_run(self.name, cached_candlesticks, indicators)
+
                 if trade_status == TradeStatus.BUY:
-                    self.sim_buy(trade.execution_time, cached_candlestick[0].close, self._get_buy_money(), _log)
+                    self.sim_buy(trade.execution_time, cached_candlesticks[0].Close, self._get_buy_money(), _log)
                 elif trade_status == TradeStatus.SELL:
-                    self.sim_sell(trade.execution_time, cached_candlestick[0].close, self._get_sell_size(), _log)
+                    self.sim_sell(trade.execution_time, cached_candlesticks[0].Close, self._get_sell_size(), _log)
                 end_time += timedelta(minutes=fetch_interval)
                 # update tmp_trades
                 start_time = end_time - timedelta(minutes=period)
-                for i in range(len(tmp_trades.copy())-1, -1, -1):
-                    if tmp_trades[i].execution_time < start_time:
-                        tmp_trades.pop()
-                    else:
-                        break
+                index = len(tmp_trades) - 1
+                while index >= 0 and tmp_trades[index].execution_time < start_time:
+                    tmp_trades.pop()
+                    index -= 1
 
     def _get_buy_money(self) -> float:
         _type = type(self.invest_strategy)
@@ -76,8 +87,8 @@ class Simulator:
         self.account_money -= money
 
         # loss_cut, for margin
-        if self.loss_cut and self.account_coin < 0.001 and self.account_money < self.loss_cut:
-            _log.warning(f'LOSS CUT: {self.account_money}')
+        # if self.loss_cut and self.account_coin < 0.001 and self.account_money < self.loss_cut:
+        #     _log.warning(f'LOSS CUT: {self.account_money}')
         
         s_time = datetime_to_str(time)
         _log.info(f'{s_time}, BUY, {price:.2f}, {_size}, {self.account_coin}, {self.account_money:.2f}')

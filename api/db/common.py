@@ -11,7 +11,7 @@ Base = declarative_base()
 _engine: Engine = None
 _Session: sessionmaker = None
 
-def _get_engine() -> Engine:
+def get_engine() -> Engine:
     global _engine
     if _engine is None:
         connection_string = Config().connection_string
@@ -26,7 +26,7 @@ def _get_engine() -> Engine:
     return _engine
 
 
-def _create_sessison(engine: Engine) -> Session:
+def create_sessison(engine: Engine) -> Session:
     global _Session
     if _Session is None:
         _Session = sessionmaker(bind=engine)
