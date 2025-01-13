@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from tradeengine.models.candlestick import CandleStick, Indicator
 from tradeengine.core.strategies import TradeStatus
 from tradeengine.tools.common import create_folder_if_not_exists
+from tradeengine.tools.constants import ConstantPaths
 
 
 class MarketEnv(gym.Env):
@@ -113,11 +114,11 @@ class MarketEnv(gym.Env):
         return round((old_num - new_num) / old_num, 3)
 
 def _get_model_path(name:str) -> Path:
-    folder = 'ml_models'
+    folder = ConstantPaths.RL_MODELS
     create_folder_if_not_exists(folder)
 
     file_name = f'{name}_dqn_model.zip'
-    return Path(folder, file_name)
+    return folder.joinpath(file_name)
 
 def rl_training(name:str, candlesticks:List[CandleStick], indicators:List[Indicator], best_buy_times:List[datetime]=[], best_sell_times:List[datetime]=[], save_model=True) -> DQN:
     env = DummyVecEnv([lambda: MarketEnv(indicators, candlesticks, best_buy_times, best_sell_times)])

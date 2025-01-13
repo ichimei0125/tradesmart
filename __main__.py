@@ -21,7 +21,7 @@ def update_model() -> None:
     # TODO: sepreate
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    Simulator(e).test_ml(training_test_ratio=0.8)
+    Simulator(e).test_rl(training_test_ratio=0.8)
 
 def find_best() -> None:
     c = Config()
@@ -32,8 +32,7 @@ def find_best() -> None:
 def lstm() -> None:
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    since = datetime.now() - timedelta(days=90)
-    Simulator(e).lstm(since)
+    Simulator(e).test_lstm()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="tradebot")

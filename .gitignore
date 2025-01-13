@@ -3,7 +3,6 @@
 .DS_Store
 config.yaml
 log/
-ml_models/
 output/
 
 # Byte-compiled / optimized / DLL files

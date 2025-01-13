@@ -16,7 +16,7 @@ from tradeengine.tools.convertor import convert_dataclass_to_dataframe
 from tradeengine.models.invest import FixedInvest, Invest
 from tradeengine.simulator.simulator import Simulator as EngineSimulator
 from tradeengine.core.ml.reinforcement_learning import rl_training, rl_run
-from tradeengine.core.ml.lstm import MarketLSTM
+from tradeengine.core.ml.lstm import lstm_training, lstm_run
 
 import concurrent.futures
 from multiprocessing import cpu_count
@@ -55,7 +55,7 @@ class Simulator:
 
         engine_simulator.run(MarketInfo.CANDLESTICK_NUMS, self.exchange.candlestick_interval, self.exchange.fetch_data_interval_minute, self.exchange.exchange_name, symbol)
 
-    def test_ml(self,  last_days:int=59, training_test_ratio:float=0.5) -> None:
+    def test_rl(self,  last_days:int=59, training_test_ratio:float=0.5) -> None:
         since = get_now() - timedelta(days=last_days)
         since = local_2_utc(since)
         data = self.exchange.fetch_candlesticks(since, use_yahoo_finance=False)
@@ -85,12 +85,20 @@ class Simulator:
             for _, candlesticks in candlestick_info.items():
                 find_best_trade(candlesticks, name=get_unique_name(self.exchange.exchange_name, symbol))
 
-    def lstm(self, since:datetime) -> None:
+    def test_lstm(self, last_days:int=90, training_test_ratio:float=0.8) -> None:
+        since = get_now() - timedelta(days=last_days)
+        since = local_2_utc(since)
         data = self.exchange.fetch_candlesticks(since, use_yahoo_finance=False)
         for symbol, candlestick_info in data.items():
+            name = get_unique_name(self.exchange.exchange_name, symbol)
             for _, candlesticks in candlestick_info.items():
-                lstm_engine = MarketLSTM(candlesticks)
-                lstm_engine.run()
+                index = int(len(candlesticks) * (1- training_test_ratio))
+
+                training_candlesticks = candlesticks[index:]
+                test_candlesticks = candlesticks[:index]
+
+                lstm_training(name, training_candlesticks)
+                lstm_run(name, training_candlesticks)
 
 
 def _find_best_trade(candlesticks:List[CandleStick]) -> Tuple[List[datetime], List[datetime]]:
