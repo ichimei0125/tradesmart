@@ -19,6 +19,9 @@ setup(
         "stable_baselines3~=2.4",
         "yfinance~=0.2",
         "matplotlib~=3.10",
+        "tensorflow>=2,<3",
+        "keras>=3,<4",
+        "scikit-learn~=1.6",
     ],
     # entry_points={
     #     "console_scripts": [

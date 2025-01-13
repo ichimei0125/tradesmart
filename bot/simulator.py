@@ -16,6 +16,7 @@ from tradeengine.tools.convertor import convert_dataclass_to_dataframe
 from tradeengine.models.invest import FixedInvest, Invest
 from tradeengine.simulator.simulator import Simulator as EngineSimulator
 from tradeengine.core.ml.reinforcement_learning import rl_training, rl_run
+from tradeengine.core.ml.lstm import MarketLSTM
 
 import concurrent.futures
 from multiprocessing import cpu_count
@@ -84,6 +85,12 @@ class Simulator:
             for _, candlesticks in candlestick_info.items():
                 find_best_trade(candlesticks, name=get_unique_name(self.exchange.exchange_name, symbol))
 
+    def lstm(self, since:datetime) -> None:
+        data = self.exchange.fetch_candlesticks(since, use_yahoo_finance=False)
+        for symbol, candlestick_info in data.items():
+            for _, candlesticks in candlestick_info.items():
+                lstm_engine = MarketLSTM(candlesticks)
+                lstm_engine.run()
 
 
 def _find_best_trade(candlesticks:List[CandleStick]) -> Tuple[List[datetime], List[datetime]]:
