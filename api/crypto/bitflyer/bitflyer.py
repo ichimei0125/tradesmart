@@ -29,7 +29,7 @@ class Bitflyer(Exchange):
         self.is_realtime:bool = False
         self.fetch_data_interval_minute:int = 1
         # tech analysis
-        self.candlestick_interval:int = 5
+        self.candlestick_interval:int = 10
 
         # cache
         self.cache_trades:List[Trade]

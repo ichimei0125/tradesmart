@@ -83,9 +83,9 @@ class Simulator:
         data = self.exchange.fetch_candlesticks(since, use_yahoo_finance=False)
         for symbol, candlestick_info in data.items():
             for _, candlesticks in candlestick_info.items():
-                find_best_trade(candlesticks, name=get_unique_name(self.exchange.exchange_name, symbol))
+                find_best_trade(candlesticks, name=get_unique_name(self.exchange.exchange_name, symbol), show_pic=False)
 
-    def test_lstm(self, last_days:int=90, training_test_ratio:float=0.8) -> None:
+    def train_lstm(self, last_days:int=90, training_test_ratio:float=0.8) -> None:
         since = get_now() - timedelta(days=last_days)
         since = local_2_utc(since)
         data = self.exchange.fetch_candlesticks(since, use_yahoo_finance=False)
@@ -98,7 +98,7 @@ class Simulator:
                 test_candlesticks = candlesticks[:index]
 
                 lstm_training(name, training_candlesticks)
-                lstm_run(name, training_candlesticks)
+                # lstm_run(name, training_candlesticks)
 
 
 def _find_best_trade(candlesticks:List[CandleStick]) -> Tuple[List[datetime], List[datetime]]:

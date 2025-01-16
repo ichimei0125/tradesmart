@@ -5,9 +5,10 @@ from typing import List, Optional
 from collections import deque
 
 from tradeengine.core.ml.reinforcement_learning import rl_run
-from tradeengine.core.strategies import TradeStatus, simple_strategy
+from tradeengine.core.ml.lstm import lstm_run
+from tradeengine.core.strategies import TradeStatus, simple_strategy, tech_strategy
 from tradeengine.models.trade import Trade, sort_trades_desc
-from tradeengine.models.candlestick import get_indicator
+from tradeengine.models.candlestick import Indicator, get_indicator
 from tradeengine.models.invest import *
 from tradeengine.tools.convertor import datetime_to_str, ConvertTradeToCandleStick
 from tradeengine.tools.common import get_unique_name
@@ -50,12 +51,14 @@ class Simulator:
                 _, cached_candlesticks = ConvertTradeToCandleStick(tmp_trades, cached_candlesticks, check_trades_order=False).by_minutes(candlestick_interval)
                 indicators = get_indicator(cached_candlesticks)
                 # trade_status = simple_strategy(cached_candlesticks)
-                trade_status = rl_run(self.name, cached_candlesticks, indicators)
+                # trade_status = rl_run(self.name, cached_candlesticks, indicators)
+                # trade_status = lstm_run(self.name, cached_candlesticks)
+                trade_status = tech_strategy(cached_candlesticks, indicators)
 
                 if trade_status == TradeStatus.BUY:
-                    self.sim_buy(trade.execution_time, cached_candlesticks[0].Close, self._get_buy_money(), _log)
+                    self.sim_buy(trade.execution_time, cached_candlesticks[0].Close, self._get_buy_money(), _log, indicators[0])
                 elif trade_status == TradeStatus.SELL:
-                    self.sim_sell(trade.execution_time, cached_candlesticks[0].Close, self._get_sell_size(), _log)
+                    self.sim_sell(trade.execution_time, cached_candlesticks[0].Close, self._get_sell_size(), _log, indicators[0])
                 end_time += timedelta(minutes=fetch_interval)
                 # update tmp_trades
                 start_time = end_time - timedelta(minutes=period)
@@ -79,7 +82,7 @@ class Simulator:
             raise TypeError(f'need type Invest, type: {_type}')
 
 
-    def sim_buy(self, time, price:float, money:float, _log:log) -> str:
+    def sim_buy(self, time, price:float, money:float, _log:log, indicator:Indicator) -> str:
         if self.account_money <= money:
             return
         _size = (money / price)
@@ -91,9 +94,9 @@ class Simulator:
         #     _log.warning(f'LOSS CUT: {self.account_money}')
         
         s_time = datetime_to_str(time)
-        _log.info(f'{s_time}, BUY, {price:.2f}, {_size}, {self.account_coin}, {self.account_money:.2f}')
+        _log.info(f'{s_time}, BUY, {price:.2f}, {_size}, {self.account_coin}, {self.account_money:.2f}, {indicator.RSI}, {indicator.RSI_MA}, {indicator.Stoch_K}, {indicator.Stoch_D}')
 
-    def sim_sell(self, time, price:float, size:float, _log:log) -> str:
+    def sim_sell(self, time, price:float, size:float, _log:log, indicator:Indicator) -> str:
         if self.account_coin < 0.001:
             return
 
@@ -105,7 +108,7 @@ class Simulator:
             _log.warning(f'LOSS CUT: {self.account_money}')
 
         s_time = datetime_to_str(time)
-        _log.info(f'{s_time}, SELL, {price:.2f}, {size}, {self.account_coin}, {self.account_money:.2f}')
+        _log.info(f'{s_time}, SELL, {price:.2f}, {size}, {self.account_coin}, {self.account_money:.2f}, {indicator.RSI}, {indicator.RSI_MA}, {indicator.Stoch_K}, {indicator.Stoch_D}')
 
 
 

@@ -15,7 +15,7 @@ def main() -> None:
 def simulator() -> None:
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    Simulator(e).run(last_days=10)
+    Simulator(e).run(last_days=19)
 
 def update_model() -> None:
     # TODO: sepreate
@@ -26,13 +26,13 @@ def update_model() -> None:
 def find_best() -> None:
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    since = datetime.now() - timedelta(days=90)
+    since = datetime.now() - timedelta(days=20)
     Simulator(e).find_best_trade(since)
 
-def lstm() -> None:
+def train_lstm() -> None:
     c = Config()
     e = Bitflyer(c.bitflyer.symbols, c.bitflyer.dry_run_symbols)
-    Simulator(e).test_lstm()
+    Simulator(e).train_lstm()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="tradebot")
@@ -41,8 +41,8 @@ if __name__ == '__main__':
     subparsers.add_parser("trade", help="trade mode, default mode")
     sub_simulate = subparsers.add_parser("simulate", help="simulate past data")
     sub_simulate.add_argument("--find_best_trade", action="store_true", help="Find the best trades")
-    sub_simulate.add_argument("--lstm", action="store_true", help="use LSTM to preidct")
-    subparsers.add_parser("update_model", help="update bot's model")
+    sub_train_simulate = subparsers.add_parser("train", help="update bot's model")
+    sub_train_simulate.add_argument("--lstm", action="store_true", help="use LSTM to preidct")
 
     args = parser.parse_args()
 
@@ -55,9 +55,9 @@ if __name__ == '__main__':
     elif args.mode == "simulate":
         if args.find_best_trade:
             find_best()
-        elif args.lstm:
-            lstm()
         else:
             simulator()
-    elif args.mode == "update_model":
-        update_model()
+    elif args.mode == "train":
+        if args.lstm:
+            train_lstm()
+        # update_model()

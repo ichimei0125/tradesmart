@@ -94,25 +94,10 @@ class MarketLSTM:
         X, y, scaler = self.preprocess_data()
 
         # predict
-        predictions = model.predict(X)
+        predictions = model.predict(X, verbose=0)
         predictions = scaler.inverse_transform(predictions)
 
-        real_values = scaler.inverse_transform(y)
-
-        if show_pic:
-            plt.figure(figsize=(10, 6))
-            plt.plot(real_values, label='Real Prices', marker='o')
-            for i in range(self.look_forward):
-                plt.plot(
-                    predictions[:, i],
-                    label=f'Predicted Price +{i+1}',
-                    marker='x'
-                )
-            plt.legend()
-            plt.xlabel('Time')
-            plt.ylabel('Price')
-            plt.title('LSTM Price Prediction')
-            plt.show()
+        # real_values = scaler.inverse_transform(y)
 
         return predictions
 
@@ -124,13 +109,21 @@ def _get_model_path(name:str) -> Path:
     return folder.joinpath(file_name)
 
 def lstm_training(name, candlesticks: List[CandleStick]) -> None:
-    engine = MarketLSTM(candlesticks, look_back=20, look_forward=3)
+    engine = MarketLSTM(candlesticks, look_back=20, look_forward=1)
     engine.train_model(save_path=_get_model_path(name), show_pic=True)
 
-def lstm_run(name, candlesticks: List[CandleStick]) -> List[float]:
-    engine = MarketLSTM(candlesticks, look_back=20, look_forward=3)
+def lstm_run(name, candlesticks: List[CandleStick]) -> TradeStatus:
+    engine = MarketLSTM(candlesticks, look_back=20, look_forward=1)
     res = engine.predict(save_path=_get_model_path(name))
 
-    print(res)
+    is_up = candlesticks[1].Close > candlesticks[2].Close
+    is_down = candlesticks[1].Close < candlesticks[2].Close
+    is_predict_up = res[-1][0] > res[-2][0]
+    is_predict_down = res[-1][0] < res[-2][0]
 
-    return res 
+    if is_up and is_predict_down:
+        return TradeStatus.BUY
+    elif is_down and is_predict_up:
+        return TradeStatus.SELL
+    else:
+        return TradeStatus.HOLD

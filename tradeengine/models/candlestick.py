@@ -29,6 +29,7 @@ class Indicator:
     SMA_20: float
     SMA_200: float
     RSI: float
+    RSI_MA: float
     MACD: float
     MACD_SIGNAL: float
     MACD_HIST: float
@@ -63,6 +64,7 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
 
     # RSI
     rsi = talib.RSI(real=closes, timeperiod=14)
+    rsi_ma = talib.MA(real=rsi, timeperiod=14, matype=MA_Type.SMA)
 
     # MACD
     macd, macdsignal, macdhist = talib.MACD(real=closes, fastperiod=12, slowperiod=26, signalperiod=9)
@@ -80,6 +82,7 @@ def get_indicator(candlesticks:List[CandleStick]) -> List[Indicator]:
             SMA_20=sma_20[i],
             SMA_200=sma_200[i],
             RSI=rsi[i],
+            RSI_MA=rsi_ma[i],
             MACD=macd[i],
             MACD_SIGNAL=macdsignal[i],
             MACD_HIST=macdhist[i],
